@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Storytellers → Spinning Photo Video Creator</title>
+  <title>Storytellers Motion → Spinning Vinyl Video Maker</title>
 
   <style>
     @font-face {
@@ -408,6 +408,59 @@
     canvas#vinylCanvas { max-height: calc(100vh - 210px); max-width: 100%; }
   }
 </style>
+<style id="premiumPass">
+  /* scroll: thin, transparent track, the thumb shows only while the pointer is over the panel */
+  .panel-left, .panel-right { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  .panel-left:hover, .panel-right:hover { scrollbar-color: rgba(255,255,255,0.20) transparent; }
+  /* name */
+  .logo { white-space: nowrap; }
+  .section-label { letter-spacing: 0.16em; }
+  /* format cards */
+  .format-card { border-width: 1px; border-radius: 10px; padding: 0.7rem 0.35rem 0.6rem;
+                 background: linear-gradient(180deg, #1c1c1c, #161616);
+                 transition: border-color .18s, background .18s, transform .18s, box-shadow .18s; }
+  .format-card:hover { transform: translateY(-1px); }
+  .format-card.active { box-shadow: 0 0 0 1px rgba(29,185,84,0.30), 0 6px 18px rgba(29,185,84,0.10); }
+  .format-name { color: #d2d2d2; letter-spacing: 0.08em; }
+  .format-ratio { font-size: 0.62rem; color: rgba(255,255,255,0.90); font-variant-numeric: tabular-nums; }
+  .format-platforms { font-size: 0.6rem; color: rgba(255,255,255,0.74); line-height: 1.35; }
+  /* buttons */
+  .fx-btn { border-color: #2c2c2c; color: #a0a0a8; border-radius: 7px; padding: 9px 4px; min-height: 34px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+            transition: border-color .16s, color .16s, background .16s, box-shadow .16s; }
+  .fx-btn:hover:not(.dis) { border-color: #4c4c4c; color: #ececec; }
+  .fx-btn.on { background: rgba(29,185,84,0.10); box-shadow: inset 0 0 0 1px rgba(29,185,84,0.22), 0 0 14px rgba(29,185,84,0.10); }
+  .seg-control { border-radius: 8px; border-color: #2c2c2c; background: #181818; }
+  .seg-control button { padding: 0.34rem 0.75rem; }
+  .seg-control button:hover:not(.active) { color: #ececec; }
+  .seg-control button.active { box-shadow: 0 0 12px rgba(29,185,84,0.25); }
+  .img-upload-mini, .btn-preview { border-radius: 7px; transition: border-color .16s, color .16s; }
+  .btn-record { border-radius: 10px; letter-spacing: 0.04em; box-shadow: 0 8px 22px rgba(29,185,84,0.22); transition: transform .12s, box-shadow .18s; }
+  .btn-record:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(29,185,84,0.32); }
+  /* sliders */
+  input[type="range"] { height: 3px; background: #2e2e2e; }
+  input[type="range"]::-webkit-slider-thumb { width: 13px; height: 13px; box-shadow: 0 0 0 4px rgba(29,185,84,0.16); transition: box-shadow .16s; }
+  input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(29,185,84,0.22); }
+  input[type="range"]::-moz-range-thumb { width: 13px; height: 13px; border: none; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(29,185,84,0.16); }
+  input[type="color"] { border-radius: 7px; width: 34px; overflow: hidden; }
+  /* access screen */
+  .gate { background: radial-gradient(1200px 700px at 50% 38%, #141a16 0%, #0a0a0a 62%); overflow: hidden; }
+  .gate::before { content: ""; position: absolute; width: 150vmin; height: 150vmin; left: 50%; top: 50%; margin: -75vmin 0 0 -75vmin; border-radius: 50%;
+                  background: conic-gradient(from 0deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,0.055) 40deg, rgba(255,255,255,0) 80deg,
+                                             rgba(255,255,255,0) 180deg, rgba(255,255,255,0.055) 220deg, rgba(255,255,255,0) 260deg, rgba(255,255,255,0) 360deg),
+                              repeating-radial-gradient(circle, rgba(255,255,255,0.03) 0 1px, rgba(0,0,0,0) 1px 7px);
+                  animation: gateSpin 48s linear infinite; pointer-events: none; }
+  @keyframes gateSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .gate::before { animation: none; } }
+  .gate-card { position: relative; max-width: 420px; background: rgba(18,18,18,0.72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+               border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 2.4rem 2rem 2rem; box-shadow: 0 30px 80px rgba(0,0,0,0.55); }
+  .gate-logo { font-size: clamp(1.5rem, 7vw, 2.2rem); white-space: nowrap; }
+  .gate-sub { margin-top: 1.2rem; color: #8c8c8c; }
+  .gate-input { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.10); border-radius: 10px; padding: 0.8rem; transition: border-color .18s, box-shadow .18s; }
+  .gate-input:focus { box-shadow: 0 0 0 3px rgba(29,185,84,0.15); }
+  .gate-btn { border-radius: 10px; padding: 0.8rem; letter-spacing: 0.06em; box-shadow: 0 8px 24px rgba(29,185,84,0.22); transition: transform .12s, box-shadow .18s; }
+  .gate-btn:hover { opacity: 1; transform: translateY(-1px); box-shadow: 0 10px 28px rgba(29,185,84,0.32); }
+</style>
 </head>
 <body>
 
@@ -416,7 +469,7 @@
      entered. Unlock persists for the browser session. -->
 <div class="gate" id="gate" aria-hidden="false">
   <div class="gate-card">
-    <div class="gate-logo">storytellers</div>
+    <div class="gate-logo">storytellers motion</div>
     <div class="gate-sub">Enter the password to continue</div>
     <form class="gate-form" id="gateForm">
       <input class="gate-input" id="gateInput" type="password" placeholder="Password"
@@ -450,7 +503,7 @@
 </script>
 
 <header>
-  <div class="logo">storytellers</div>
+  <div class="logo">storytellers motion</div>
   <div class="tagline" id="fxHints"></div>
 </header>
 
@@ -580,8 +633,8 @@
       <div class="setting-row">
         <span class="setting-label">Background</span>
         <div class="setting-control">
-          <input type="color" id="bgColor" value="#111111">
-          <span style="font-size:0.7rem;color:var(--text-dim)" id="bgHex">#111111</span>
+          <input type="color" id="bgColor" value="#fafafa">
+          <span style="font-size:0.7rem;color:var(--text-dim)" id="bgHex">#fafafa</span>
         </div>
       </div>
 
@@ -757,7 +810,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">WEB v7.0-b7 · 2026-11-13 · test build: Vinyl gets a Sleeve variant (artwork as the cover, record pulled out and spinning)</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b9 · 2026-11-13 · test build: the name is written in full in the logo lettering</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -773,7 +826,7 @@ const S = {
   angle:          0,
   rpm:            1,
   rotDir:         1,          // disc spin direction: 1 clockwise, -1 counter-clockwise
-  bgColor:        "#111111",
+  bgColor:        "#fafafa",
   ratio:          "1:1",
   canvasW:        1080,
   canvasH:        1080,
@@ -796,6 +849,11 @@ const imgZone       = document.getElementById("imgZone");
 const audioZone     = document.getElementById("audioZone");
 const bgColorInput  = document.getElementById("bgColor");
 const bgHex         = document.getElementById("bgHex");
+// each person's last background color stays in their own browser
+try {
+  const savedBg = localStorage.getItem("stm.bg");
+  if (/^#[0-9a-f]{6}$/i.test(savedBg || "")) { S.bgColor = savedBg; bgColorInput.value = savedBg; bgHex.textContent = savedBg; }
+} catch (e) {}
 const rpmSlider     = document.getElementById("rpmSlider");
 const rpmVal        = document.getElementById("rpmVal");
 const sizeSlider    = document.getElementById("sizeSlider");
@@ -1785,6 +1843,7 @@ makeDrop(audioZone, loadAudio);
 bgColorInput.addEventListener("input", () => {
   S.bgColor = bgColorInput.value;
   bgHex.textContent = bgColorInput.value;
+  try { localStorage.setItem("stm.bg", S.bgColor); } catch (e) {}
   invalidateSprites();
   if (!animId) draw();
 });
@@ -2555,8 +2614,8 @@ void main(){
     // soft rectangular drop shadow
     vec2 dq = abs(q - vec2(0.0,-0.015)) - vec2(h);
     float sd = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0);
-    float sh = smoothstep(h*0.35, 0.0, sd) * step(0.0, sd);
-    col = mix(col, col*0.30, sh*0.70);
+    float sh = (0.55*smoothstep(h*0.10, 0.0, sd) + 0.20*smoothstep(h*0.36, 0.0, sd)) * step(0.0, sd);   // contact shadow + soft ambient
+    col = mix(col, col*0.35, sh);
 
     float box = max(abs(q.x), abs(q.y));
     if(box < h + 0.004){
@@ -2581,8 +2640,9 @@ void main(){
     float r = length(q);
     float R = uDiscR*(1.0 + kick*0.040);                     // breathes with the Beat dial
 
-    float sh = smoothstep(R*1.30, R*0.92, length(q - vec2(0.0,-0.018)));
-    col = mix(col, col*0.30, sh*0.75);
+    float d0 = length(q - vec2(0.0,-0.014));
+    float sh = 0.55*smoothstep(R*1.10, R*0.97, d0) + 0.20*smoothstep(R*1.32, R*0.95, d0);   // contact shadow + soft ambient
+    col = mix(col, col*0.35, sh);
 
     if(r < R + 0.006){
       vec2 dLoc = q/R;
@@ -2632,8 +2692,9 @@ void main(){
     // ── Vinyl record on its own ──
     vec2 q = (gl_FragCoord.xy - 0.5*uRes)/min(uRes.x, uRes.y);
     float R = uDiscR;
-    float sh = smoothstep(R*1.30, R*0.92, length(q - vec2(0.0,-0.018)));
-    col = mix(col, col*0.30, sh*0.75);
+    float d0 = length(q - vec2(0.0,-0.014));
+    float sh = 0.55*smoothstep(R*1.10, R*0.97, d0) + 0.20*smoothstep(R*1.32, R*0.95, d0);   // contact shadow + soft ambient
+    col = mix(col, col*0.35, sh);
     float cov;
     vec3 rec = vinylRecord(q, R, cov);
     col = mix(col, rec, cov);
@@ -2645,11 +2706,12 @@ void main(){
     float Rr = geo.x, hs = 1.04*Rr;
     vec2 sc = vec2(geo.y, 0.0), rc = vec2(geo.z, 0.0);
     // shadows on the background: under the record and under the sleeve
-    float shR = smoothstep(Rr*1.28, Rr*0.92, length(q - rc - vec2(0.0, -0.016)));
+    float dR0 = length(q - rc - vec2(0.0, -0.014));
+    float shR = 0.55*smoothstep(Rr*1.10, Rr*0.97, dR0) + 0.20*smoothstep(Rr*1.32, Rr*0.95, dR0);
     vec2 dq = abs(q - sc - vec2(0.0, -0.014)) - vec2(hs);
     float sdS = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0);
-    float shS = smoothstep(hs*0.30, 0.0, sdS);
-    col = mix(col, col*0.30, max(shR*0.75, shS*0.70));
+    float shS = 0.55*smoothstep(hs*0.09, 0.0, sdS) + 0.20*smoothstep(hs*0.32, 0.0, sdS);
+    col = mix(col, col*0.35, max(shR, shS));
     // the record, behind the sleeve
     float cov;
     vec3 rec = vinylRecord(q - rc, Rr, cov);
@@ -3465,7 +3527,7 @@ function render(W, H, angleDeg, tOverride){
   if(fboW!==W || fboH!==H) makeFbos(W, H);
   const t = (tOverride !== undefined) ? tOverride : (performance.now()-t0)/1000;
   updateBeat(t);
-  const bg = hexToRgb01(S.bgColor || "#111111");
+  const bg = hexToRgb01(S.bgColor || "#fafafa");
   const beatDisc = 0, beatBg = 0;
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[cur]);
