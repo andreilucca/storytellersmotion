@@ -808,7 +808,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b12 · 2026-11-13 · test build: soft text and calm accent everywhere, FULL badges muted</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b13 · 2026-11-13 · test build: console labels renamed to storytellersmotion</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -3463,7 +3463,7 @@ function setHitMap(buf){
       const m = fxAnalyzeHits(x, sr / dec);
       if(job !== hitJob) return;
       hitMap = m;
-      console.log("[vinylaudio burst] hit map: " + m.t.length + " hits, " + Math.round(m.perMin) + " strong per minute, " + m.dur.toFixed(1) + " s");
+      console.log("[storytellersmotion burst] hit map: " + m.t.length + " hits, " + Math.round(m.perMin) + " strong per minute, " + m.dur.toFixed(1) + " s");
     } catch(e){ console.warn("Burst analysis failed:", e); }
   }, 30);
 }
@@ -3726,7 +3726,7 @@ async function liveExport(){
       } catch(_){}
     }
   }
-  console.log("[vinylaudio export] strategy:", wcCfg ? ("webcodecs " + wcCfg.codec) : "realtime-capture");
+  console.log("[storytellersmotion export] strategy:", wcCfg ? ("webcodecs " + wcCfg.codec) : "realtime-capture");
   if (!wcCfg) return liveExportRealtime();
 
   stopPreview();
