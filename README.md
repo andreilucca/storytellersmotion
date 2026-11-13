@@ -1,29 +1,46 @@
-# Storytellers, Spinning Vinyl Video Maker
+# Storytellers Motion
 
-### Live app: **https://andreilucca.github.io/vinylaudio/**
+### Live app: **https://andreilucca.github.io/storytellersmotion/**
 
-**Current version: WEB v6.9 (2026-09-24)**
+Repository: https://github.com/andreilucca/storytellersmotion
 
-Turn a photo and a song into a smooth, professional spinning vinyl MP4 with an
-animated effects engine. Everything renders 100% in your browser: no server,
-no upload, no watermark, no account. Your files never leave your device.
+**Current version: WEB v7.0-b13 (2026-11-13)**
+
+Turn a cover and a song into a smooth, professional promo video: a spinning
+disc, a vinyl record, or a record sliding out of its sleeve, over an animated
+effects engine. Everything renders 100% in your browser: no server, no upload,
+no watermark, no account. Your files never leave your device.
+
+> Renamed from `vinylaudio`. The old repository address redirects here, but the
+> old live app address (`andreilucca.github.io/vinylaudio`) does not: GitHub
+> does not redirect project site URLs after a rename. Use the link above.
 
 ## Features
 
-- **Photo to spinning vinyl**: your image becomes the rotating record label,
-  with drop shadow, anti-aliased circular edge and centre spindle hole. Three
-  artwork modes: **Disc** (spinning record), **Card** (centred poster) and
-  **Off** (background effect fills the whole frame).
-- **Effects engine (WebGL)**: 28 animated background effects (Melt, Palette
-  flow, Vortex, Ripple, Bloom, Nebula, Tunnel, Kaleido, Glitch, Spectrum,
-  Droste, Warp, Liquid, Reactor, Echo, Datamosh, VHS, Burn, Halftone, Slices,
-  Feedback, Dither, ASCII, Twinspin, Depth 3D, Cymatics, Topographic, CRT)
-  with per-effect settings, palette editing, and forward and reverse
-  direction. Effects marked **FULL** rotate or evolve continuously and need
-  Export render: Full render on full songs (the app reminds you with a toast).
+- **Four artwork modes**
+  - **Disc**: the artwork itself is the spinning record, with drop shadow,
+    anti-aliased edge and centre spindle hole.
+  - **Card**: the square artwork centred as a poster, no rotation.
+  - **Vinyl**: a black grooved record under a light that stays fixed in the
+    room, with the artwork as the spinning centre label. Two variants:
+    **Record** (the record on its own) and **Sleeve** (the artwork as the
+    cover, with the record pulled halfway out and spinning).
+  - **Off**: no artwork layer, the background effect fills the whole frame.
+- **Effects engine (WebGL)**: 22 animated background effects (Melt, Vortex,
+  Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom, Spectrum, Warp,
+  Reactor, VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
+  Cymatics, Burst, Eclipse) with per-effect settings, palette editing, and
+  forward and reverse direction. Colors come from the artwork.
+- **Every effect has its own look**: selecting an effect loads its full
+  default look, including the finishing dials. Reset restores that look.
+- **Burst follows the music**: when the audio loads, the whole track is
+  analysed once and the hits are mapped. Bursts land on those hits in the
+  preview and in the export. Seven compositions take turns (grid, rays, rings,
+  bars, diagonal, flash, mosaic), so two bursts in a row never look alike.
+  Speed sets how often it hits. Burst always exports as a full render.
 - **Finishing dials**: Aberration, Glow, Grain and Vignette apply on top of
-  any effect; all default to 0 (image untouched) and reset together with the
-  effect settings.
+  any effect.
+- **Rotation**: 1 to 120 RPM (default 1), clockwise or counter-clockwise.
 - **Optional audio**: MP3, WAV, OGG, M4A, or export a silent clip. Full song
   of any length, or a fixed window (30s or 1m) dragged across the waveform,
   with audio preview.
@@ -32,26 +49,40 @@ no upload, no watermark, no account. Your files never leave your device.
 - **60 fps deterministic export**: every frame is computed at its exact
   timestamp with a perfectly constant rotation step per frame. Zero dropped or
   duplicated frames, by construction. The export matches the live preview.
-- **Fast full-song exports (Fast loop)**: only one short seamless loop is
-  rendered (whole disc revolutions plus a 1 second background crossfade baked
-  at render time), then stream-copied to the full song length. A 6 minute song
-  exports in roughly the same time as a 1 minute clip. **Full render** computes
-  every frame of the song 1:1 and is required for FULL-tagged effects.
+- **Fast full-song exports (Fast loop)**: only one seamless loop is rendered
+  (whole disc revolutions, at least 12 seconds, plus a 1 second background
+  crossfade baked at render time), then stream-copied to the full song length.
+  **Full render** computes every frame of the song 1:1 and is required for
+  FULL-tagged effects.
 - **Full-song safe**: the export bitrate adapts to the song length so long
   tracks always fit in browser memory (up to 45 Mbps on short clips, around
   24 Mbps at 5 to 6 minutes, never below 8 Mbps on the GPU path), with a
   keyframe every 2 seconds for clean seeking.
-- **Platform-friendly heavy effects (v6.9)**: Grain reseeds its noise pattern
-  at 10 Hz instead of every frame, the CRT 37 Hz full-frame flicker was
-  removed, and VHS snow was calmed (8 Hz reseed, halved amplitude). Motion,
-  rotation and frame rate are untouched; the change only lowers the temporal
-  entropy of the encoded pixels, so platform re-encoders (YouTube) keep the HD
-  rungs cheap enough to serve on Auto quality.
+- **Platform-friendly heavy effects**: Grain reseeds its noise pattern at
+  10 Hz instead of every frame and VHS snow is calmed. Motion, rotation and
+  frame rate are untouched; this only lowers the temporal entropy of the
+  encoded pixels, so platform re-encoders (YouTube) keep the HD rungs cheap
+  enough to serve on Auto quality.
+- **Background color**: dark by default (`#171616`). The color you pick is
+  remembered in your own browser.
+
+## Fast loop and rotation speed
+
+The loop is always a whole number of disc revolutions. At 1 RPM one revolution
+takes 60 seconds, so:
+
+- 30s and 1m clips are rendered in full, frame by frame.
+- On a full song, Fast loop renders a 60 second loop instead of a 12 second
+  one, so the export takes longer than at higher speeds.
+
+Effects marked **FULL** (Vortex, Ripple, Tunnel, Kaleido, Spectrum, Feedback,
+Twinspin, Depth 3D) rotate or evolve continuously and need Export render:
+Full render on full songs. The app reminds you with a toast.
 
 ## How the export works
 
 The exporter picks the best available strategy at record time. The chosen
-strategy is logged to the browser console as `[vinylaudio export] strategy:`.
+strategy is logged to the browser console as `[storytellersmotion export] strategy:`.
 
 **1. Deterministic GPU export (primary, WebCodecs).** Frames are rendered by
 the WebGL engine one at a time at exact timestamps and handed straight to the
@@ -66,9 +97,10 @@ support, the scene is captured live (MediaRecorder at up to 60 Mbps), then
 ffmpeg.wasm bakes the loop crossfade (x264 superfast, crf 16, adaptive
 maxrate, keyframe every 2 seconds) and muxes the audio.
 
-**Classic exporter (effects off).** The disc rotation is perfectly periodic,
-so a single revolution is rendered once with sub-frame motion blur, encoded,
-then stream-copy-looped to the full duration with the original audio muxed in.
+**Classic exporter (Disc with effects off).** The disc rotation is perfectly
+periodic, so a single revolution is rendered once with sub-frame motion blur,
+encoded, then stream-copy-looped to the full duration with the original audio
+muxed in.
 
 ffmpeg.wasm is vendored in `vendor/ffmpeg` (nothing fetched from a CDN) and is
 preloaded in the background when the page opens, so recording starts
@@ -86,10 +118,23 @@ fonts/              embedded fonts
 
 ## Usage
 
-1. Open the live app (or serve this folder with any static web server).
+1. Open the live app and pass the access screen.
 2. Upload the artwork, optionally the song, pick a format.
-3. Optionally enable an effect and tune it; the preview is what you get.
+3. Pick an artwork mode (Disc, Card, Vinyl, Off) and optionally an effect;
+   the preview is what you get.
 4. Record Video, then Download MP4.
+
+## Running it locally
+
+The app must be served over http. Opening `index.html` directly from disk
+(`file://`) shows the preview, but the export cannot start.
+
+```
+python -m http.server 8080
+```
+
+Run it in the folder that holds `index.html`, `vendor` and `fonts`, then open
+http://localhost:8080.
 
 ## Uploading to YouTube
 
@@ -99,7 +144,7 @@ and heavy content matters:
 
 - Smooth effects (Bloom, Warp, Liquid...) are cheap to re-encode and usually
   get HD on Auto right away.
-- Detail-dense effects (Depth 3D, CRT, VHS...) produce expensive 1080p
+- Detail-dense effects (Depth 3D, VHS, Burst...) produce expensive 1080p
   renditions; a fresh upload can sit on Auto 360p even though 1080p60 is
   already processed and works when selected manually.
 - **If a fresh upload stays on Auto 360p, delete the video and upload the same
@@ -111,10 +156,10 @@ and heavy content matters:
 
 ## Troubleshooting
 
-- After an update, check the version tag in the footer (bottom right); hard
-  refresh with Ctrl+F5 if it shows an older version. Current:
-  `WEB v6.9 · 2026-09-24`.
-- The console line `[vinylaudio export] strategy:` tells you which pipeline
+- After an update, check the version tag in the footer; hard refresh with
+  Ctrl+F5 if it shows an older version. Current:
+  `Storytellers Motion · WEB v7.0-b13 · 2026-11-13`.
+- The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
 - Playback stutter on YouTube while the app is exporting is expected: the GPU
@@ -122,3 +167,5 @@ and heavy content matters:
   Stats for nerds ("dropped of" counter) and retest with the app tab closed.
 - FULL-tagged effects on a full song need Export render: Full render;
   Fast loop would reset their continuous rotation at every loop.
+- The background color looks different on another computer: the chosen color
+  is stored per browser. Pick it once on each machine.
