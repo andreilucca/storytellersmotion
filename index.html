@@ -170,6 +170,8 @@
       transition: background 0.15s, color 0.15s;
     }
     .seg-control button.active { background: var(--accent); color: #000; }
+    #rotControl button { padding: 5px 13px; line-height: 0; }
+    #rotControl svg { width: 14px; height: 14px; display: block; }
     .seg-control button:hover:not(.active) { background: var(--surface3); color: var(--text); }
 
     /* ── FORMAT CARDS ───────────────────────────────── */
@@ -608,8 +610,16 @@
       <div class="setting-row">
         <span class="setting-label">Speed (RPM)</span>
         <div class="setting-control">
-          <input type="range" id="rpmSlider" min="5" max="120" value="5" step="1">
-          <span class="range-val" id="rpmVal">5</span>
+          <input type="range" id="rpmSlider" min="1" max="120" value="1" step="1">
+          <span class="range-val" id="rpmVal">1</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Rotation</span>
+        <div class="seg-control" id="rotControl">
+          <button data-rot="1" class="active" title="Disc spins clockwise" aria-label="Clockwise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+          <button data-rot="-1" title="Disc spins counter-clockwise" aria-label="Counter-clockwise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
         </div>
       </div>
 
@@ -628,10 +638,15 @@
       <div class="section-label">Effects</div>
 
       <div class="fx-lbl" style="margin-top:0">Artwork</div>
-      <div class="fx-grid2" id="fxArt" style="grid-template-columns:repeat(3,1fr)">
+      <div class="fx-grid2" id="fxArt" style="grid-template-columns:repeat(4,1fr)">
         <button class="fx-btn on" data-a="disc" title="Spinning vinyl disc">Disc</button>
         <button class="fx-btn" data-a="card" title="Square poster centred on the frame → no rotation, with a soft drop shadow and a slow Ken Burns micro-zoom.">Card</button>
+        <button class="fx-btn" data-a="vinyl" title="A black vinyl record with grooves and a light that stays fixed in the room. Your artwork becomes the spinning centre label. Photo Size sets the size of the record.">Vinyl</button>
         <button class="fx-btn" data-a="off" title="No artwork layer → the background effect fills the whole frame">Off</button>
+      </div>
+      <div class="fx-grid2" id="fxVinylOpt" style="display:none; margin-top:6px">
+        <button class="fx-btn on" data-v="record" title="The record on its own, centred">Record</button>
+        <button class="fx-btn" data-v="sleeve" title="The artwork as the record cover, with the record pulled halfway out of it and spinning">Sleeve</button>
       </div>
 
 
@@ -652,26 +667,20 @@
         <button class="fx-btn" data-m="8">Glitch</button>
         <button class="fx-btn" data-m="10">Droste</button>
         <button class="fx-btn" data-m="12">Liquid</button>
-        <button class="fx-btn" data-m="1">Palette flow</button>
         <button class="fx-btn" data-m="4">Bloom</button>
-        <button class="fx-btn" data-m="5">Nebula</button>
         <button class="fx-btn" data-m="9" title="Follows the music itself → Fast loop would repeat only the first seconds of bars; on a full song use Export render: Full render">Spectrum <span class="fx-badge">FULL</span></button>
-        <button class="fx-btn" data-m="11">Warp</button>
-        <button class="fx-btn" data-m="13">Reactor</button>
-        <button class="fx-btn" data-m="14" title="The artwork itself, blurred and darkened, filling the frame → the classic echo behind a poster or disc">Echo</button>
-        <button class="fx-btn" data-m="15" title="Compression-corruption melt: blocks drag the previous frame while keyframe bands refresh it. Feedback-based → on full songs use Full render.">Datamosh <span class="fx-badge">FULL</span></button>
-        <button class="fx-btn" data-m="17" title="Tape wobble, rolling tracking band, chroma bleed, scanlines. Streak = bleed, Swirl = noise.">VHS</button>
+        <button class="fx-btn" data-m="11" title="A flight through hyperspace: the artwork stretches into a tunnel of light, five depth layers of stars rush past with long tails, a bright core pulls everything in. Warp = tunnel glow, Streak = tail length, Swirl = core and lens flare.">Warp</button>
+        <button class="fx-btn" data-m="13" title="A whirlpool of energy with depth: two layers of spiral arms turn against each other, lit like ridges, the artwork is drawn into the spiral, a dark core sits inside a bright ring. Swirl = twist, Warp = wobble, Streak = node density.">Reactor</button>
+        <button class="fx-btn" data-m="17" title="Tape wobble, chroma bleed, scanlines and soft snow. Streak = bleed, Swirl = noise.">VHS</button>
         <button class="fx-btn" data-m="18" title="Film burn: warm light leaks drifting over the artwork with gentle flicker. Streak = intensity, Swirl = leak size.">Burn</button>
         <button class="fx-btn" data-m="19" title="The artwork as rotated print dots on warm paper → riso/editorial look. Scale = dot density.">Halftone</button>
         <button class="fx-btn" data-m="20" title="The artwork cut into horizontal bars sliding kinetically. Scale = bar count, Streak = slide amount.">Slices</button>
         <button class="fx-btn" data-m="16" title="The frame falls endlessly into itself → classic visualizer zoom echo. Reverse zooms outward. Feedback-based: on full songs use Full render.">Feedback <span class="fx-badge">FULL</span></button>
-        <button class="fx-btn" data-m="21" title="1-bit Bayer dither: ink dots on paper, retro-web. Scale = resolution, Streak = contrast, Swirl = tint the ink from the palette.">Dither</button>
-        <button class="fx-btn" data-m="22" title="Terminal mosaic: glyph-like marks whose density follows the artwork. Swirl blends from terminal green to palette colors.">ASCII</button>
         <button class="fx-btn" data-m="23" title="Two copies of the artwork spinning in opposite directions, blended into a psychedelic moire. Continuous rotation → on full songs use Full render.">Twinspin <span class="fx-badge">FULL</span></button>
         <button class="fx-btn" data-m="24" title="The artwork gains real depth: a virtual camera orbits a pseudo-3D version of the image, near planes sharp, far planes defocused. Continuous orbit → on full songs use Full render.">Depth 3D <span class="fx-badge">FULL</span></button>
         <button class="fx-btn" data-m="25" title="Chladni plate: sand made of the artwork's colors settles on the nodal lines of a vibrating plate. The plate vibrates with the music, patterns morph continuously.">Cymatics</button>
-        <button class="fx-btn" data-m="26" title="A living contour map of the artwork: its luminance is the terrain and the contour lines flow endlessly through the levels, emanating around the bright peaks. Perfectly cyclic.">Topographic</button>
-        <button class="fx-btn" data-m="27" title="The artwork on a real tube monitor: curved glass, phosphor RGB triads, scanlines, and a hum bar rolling down the screen forever. VHS is the tape; this is the television.">CRT</button>
+        <button class="fx-btn" data-m="28" title="A dark field of frames, streaks and glints that explodes on the strongest hits of your track. The whole song is analysed when it loads, so the bursts land exactly on the music. Always exports as Full render.">Burst <span class="fx-badge">FULL</span></button>
+        <button class="fx-btn" data-m="29" title="A soft mass of light flows around the disc like a crescent around an eclipse, shedding drops that orbit and merge back. Tied to the disc rotation, so it loops exactly at any length.">Eclipse</button>
       </div>
       <div class="fx-grid2" id="fxDirs" style="margin-top:6px">
         <button class="fx-btn on" data-d="1">&#10227; Forward</button>
@@ -748,7 +757,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">WEB v6.9 · 2026-09-24 · Compression-friendly heavies: Grain reseeds at 10 Hz, CRT 37 Hz flicker removed, VHS snow calmed → fixes YouTube Auto stuck at 360p on heavy effects</div>
+  <div class="footer-note">WEB v7.0-b7 · 2026-11-13 · test build: Vinyl gets a Sleeve variant (artwork as the cover, record pulled out and spinning)</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -762,7 +771,8 @@ const S = {
   audioLoaded:    false,
   isRecording:    false,
   angle:          0,
-  rpm:            5,
+  rpm:            1,
+  rotDir:         1,          // disc spin direction: 1 clockwise, -1 counter-clockwise
   bgColor:        "#111111",
   ratio:          "1:1",
   canvasW:        1080,
@@ -1012,7 +1022,7 @@ function animLoop(ts) {
   if (!animStartTs) animStartTs = ts;
   if (!S.isRecording) {
     const elapsed = ts - animStartTs;
-    S.angle = (elapsed * S.rpm * 360 / 60000) % 360;
+    S.angle = S.rotDir * ((elapsed * S.rpm * 360 / 60000) % 360);
     draw();
   }
   animId = requestAnimationFrame(animLoop);
@@ -1078,6 +1088,7 @@ async function decodeAndDrawWaveform(arrayBuffer) {
     const offCtx = new OfflineAudioContext(1, 1, 44100);
     const buf    = await offCtx.decodeAudioData(arrayBuffer);
     audioBuffer  = buf;   // keep the decoded PCM for the in-browser exporter
+    if (window.FX && FX.setHitMap) FX.setHitMap(buf);   // Burst: analyse the whole track once
     const data   = buf.getChannelData(0);
     const totalSamples = data.length;
     const BINS   = 500;
@@ -1581,7 +1592,7 @@ async function startRecording() {
     const warm  = SUB / hiFps;  // warm-up span (=1/fps): primes tmix so the loop seam has full blur
     let chain =
       `color=c=black:s=${W}x${H}:r=${hiFps}[base];` +
-      `[0:v]format=rgba,fps=${hiFps},rotate=2*PI*${effRpm}*(t-${warm})/60:ow=${rot}:oh=${rot}:c=none[art];` +
+      `[0:v]format=rgba,fps=${hiFps},rotate=${S.rotDir}*2*PI*${effRpm}*(t-${warm})/60:ow=${rot}:oh=${rot}:c=none[art];` +
       `[base][art]overlay=(W-w)/2:(H-h)/2:format=auto[spun];` +
       `[spun]tmix=frames=${SUB},trim=start_frame=${SUB},setpts=PTS-STARTPTS,fps=${fps}[blur];` +
       `[blur][1:v]overlay=0:0[v1]`;
@@ -1782,6 +1793,11 @@ rpmSlider.addEventListener("input", () => {
   S.rpm = parseInt(rpmSlider.value, 10);
   rpmVal.textContent = S.rpm;
 });
+document.getElementById("rotControl").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.rotDir = parseInt(b.dataset.rot, 10);
+  document.querySelectorAll("#rotControl button").forEach(x => x.classList.toggle("active", x === b));
+});
 
 sizeSlider.addEventListener("input", () => {
   S.vinylPct = parseInt(sizeSlider.value, 10) / 100;
@@ -1870,6 +1886,12 @@ uniform int   uArt;        // 0 none, 1 spinning disc, 2 poster card
 uniform float uDiscR, uAngle, uBeat, uBeatBg;
 uniform int   uDiscFx;     // 0 none,1 ripple,2 shatter,3 explode
 uniform float uSpec[32];
+uniform vec4  uHit;       // Burst: amplitude, layout seed, age (s), strength of the latest hit
+uniform float uHitEnv;    // Burst: loudness of the track right now, 0..1
+uniform vec4  uEl[80];    // Burst: layout of the current burst, 40 elements x 2 rows
+uniform vec2  uArtRange;  // 5th and 95th percentile of the artwork luminance (auto levels)
+uniform vec4  uLay;       // Burst: rotation, spin and drift of the current layout
+uniform float uRev;       // seconds per disc revolution
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453123); }
 float noise(vec2 p){
@@ -1910,6 +1932,18 @@ float specAt(float x){
   return v;
 }
 
+// Sleeve layout: record radius, sleeve centre x, record centre x (all in units of the short side).
+// The pair is scaled to fit every format and stays centred as a whole.
+vec3 sleeveGeo(){
+  float a = uRes.x/uRes.y, hx = 0.5*a/min(a, 1.0), hy = 0.5/min(a, 1.0);
+  float Rr = (uDiscR/0.43)*min(2.0*hx*0.86/3.48, 2.0*hy*0.72/2.08);
+  return vec3(Rr, -0.70*Rr, 0.74*Rr);
+}
+
+// frame uv → artwork uv with the artwork covering the frame (centre crop, never stretched)
+vec2 fitA(vec2 p){ float a = uRes.x/uRes.y; return (p - 0.5)*vec2(a, 1.0)/max(a, 1.0) + 0.5; }
+float smaxE(float a, float b, float k){ float h = clamp(0.5 + 0.5*(a - b)/k, 0.0, 1.0); return mix(b, a, h) + k*h*(1.0 - h); }
+
 vec3 background(vec2 uv, float t, float aspect){
   float w = uWarp*(1.0 + uBeatBg*0.9);
   float wx = fbm(vec2(uv.x*3.2*uScale,       uv.y*0.7*uScale + t*0.16)) - 0.5;
@@ -1922,17 +1956,7 @@ vec3 background(vec2 uv, float t, float aspect){
     p.y = mix(p.y, anchor, uStreak);
     p.y += t*0.028;
     p.x += wx*w*0.5;
-    col = grade(texture2D(uTex, mirror(p)).rgb);
-
-  } else if(uMode == 1){
-    float q = fbm(vec2(uv.x*3.5*uScale,         uv.y*1.1*uScale + t*0.20));
-    float r = fbm(vec2(uv.x*3.5*uScale + q*2.4, uv.y*0.9*uScale - t*0.14) + wx*w*3.0);
-    float g = fbm(vec2(uv.x*2.2*uScale + r*2.0, uv.y*0.42*uScale + t*0.10 + r));
-    float m = clamp(g*1.55 - 0.22, 0.0, 1.0);
-    float m2 = fbm(vec2(uv.x*4.0*uScale + wx*w*4.0, mix(uv.y,0.5,uStreak)*uScale + t*0.05));
-    m = mix(m, m2, uStreak*0.6);
-    col = palette(m);
-    col *= 0.55 + 0.7*m;
+    col = grade(texture2D(uTex, mirror(fitA(p))).rgb);
 
   } else if(uMode == 2){
     vec2 c = uv - 0.5; c.x *= aspect;
@@ -1978,17 +2002,6 @@ vec3 background(vec2 uv, float t, float aspect){
     float body = 1.0 - exp(-wsum*(1.2+uSwirl*2.0));
     col = ink*body + vec3(0.03)*(1.0-body);
 
-  } else if(uMode == 5){
-    vec2 p = uv; p.x *= aspect;
-    float n1 = fbm(p*1.8*uScale + vec2( t*0.050*uDir, -t*0.030));
-    float n2 = fbm(p*3.2*uScale + vec2(-t*0.032*uDir,  t*0.040) + n1*w*2.4);
-    float n3 = fbm(p*5.5*uScale + vec2( t*0.020*uDir,  t*0.055) + n2*1.5);
-    vec3 c1 = palette(clamp(n1*1.30,      0.0,1.0));
-    vec3 c2 = palette(clamp(n2*1.40-0.10, 0.0,1.0));
-    vec3 c3 = palette(clamp(n3*1.50-0.20, 0.0,1.0));
-    col = c1*0.40 + c2*(0.30+0.45*n2) + c3*(0.20+0.35*n3)*uSwirl*2.0;
-    col *= 0.45 + 0.65*n2;
-
   } else if(uMode == 6){
     // Tunnel → infinite fly-through built from the artwork (seam-free)
     vec2 c = uv - 0.5; c.x *= aspect;
@@ -2028,9 +2041,9 @@ vec3 background(vec2 uv, float t, float aspect){
     float cb = hash(cell + gseed*0.37);
     if(cb > 0.93) p += (vec2(hash(cell+1.7), hash(cell+3.1))-0.5)*0.12*0.5;
     float ca = 0.004 + 0.014*uStreak;
-    col.r = texture2D(uTex, mirror(p + vec2(ca,0.0))).r;
-    col.g = texture2D(uTex, mirror(p)).g;
-    col.b = texture2D(uTex, mirror(p - vec2(ca,0.0))).b;
+    col.r = texture2D(uTex, mirror(fitA(p + vec2(ca,0.0)))).r;
+    col.g = texture2D(uTex, mirror(fitA(p))).g;
+    col.b = texture2D(uTex, mirror(fitA(p - vec2(ca,0.0)))).b;
     col = grade(col);
     col *= 0.92 + 0.08*sin(uv.y*uRes.y*3.14159);
 
@@ -2066,38 +2079,64 @@ vec3 background(vec2 uv, float t, float aspect){
     col *= smoothstep(0.0, 0.12, r);
 
   } else if(uMode == 11){
-    // Warp → hyperspace star streaks in the palette colors
+    // Warp → a flight through hyperspace. The artwork's colors stretch into a
+    // tunnel of light with slow nebula bands, five depth layers of stars rush
+    // past with long tails, and a bright core with a lens flare pulls
+    // everything in. Depth comes from perspective: everything is born small
+    // at the centre and accelerates toward the edge.
     vec2 c = uv - 0.5; c.x *= aspect;
     float r = length(c) + 1e-4;
     float a2 = atan(c.y, c.x);
-    vec3 stars = vec3(0.0);
-    for(int i=0;i<3;i++){
-      float fi = float(i);
-      float rays = 90.0 + fi*70.0;
-      float idx = floor((a2/6.28318 + 0.5)*rays);
-      float h = hash(vec2(idx, fi*13.7 + 3.3));
-      float sp = 0.25 + h*0.55 + fi*0.15;
-      float d = fract(h*7.13 + t*sp*0.5*uDir);
-      float starR = d*d*0.95;
-      float len = 0.004 + 0.055*uStreak*(1.0-d);
-      float b2 = smoothstep(len, 0.0, abs(r - starR)) * smoothstep(1.0, 0.6, d) * step(0.30, h);
-      stars += palette(fract(h*3.1)) * b2 * (0.8 + fi*0.3);
+    // 1) tunnel of light: the artwork smeared along the rays, shaped by nebula bands in log-polar space
+    vec3 tun = vec3(0.0);
+    for(int i = 0; i < 8; i++){
+      float sc = 1.0 - float(i)*0.095;
+      tun += grade(texture2D(uTex, mirror(fitA((uv - 0.5)*sc + 0.5))).rgb);
     }
-    float n = fbm(c*(2.0*uScale) + t*0.05);
-    col = stars + palette(n)*0.07;
-    col += palette(0.8)*exp(-r*9.0)*0.35*uSwirl;             // warp core glow
-
+    tun /= 8.0;
+    vec2 av = vec2(cos(a2), sin(a2));
+    float nb  = fbm(av*1.5*uScale + vec2(log(r)*1.8 - t*0.35*uDir, 0.0));
+    float nb2 = fbm(av*3.5*uScale - vec2(0.0, log(r)*2.6 - t*0.55*uDir));
+    vec3 tunnel = tun*(0.06 + 0.70*nb*nb + 0.30*nb2*nb2*nb2)*(0.45 + 1.60*w)*mix(0.20, 1.0, smoothstep(0.0, 0.75, r));   // Warp = how much of the artwork glows in the tunnel
+    // 2) stars: thin streaks with a bright head, tails growing as they come closer
+    vec3 stars = vec3(0.0);
+    for(int i = 0; i < 5; i++){
+      float fi = float(i);
+      float rays = 70.0 + fi*55.0;
+      float cellA = (a2/6.28318 + 0.5)*rays;
+      float h = hash(vec2(floor(cellA), fi*13.7 + 3.3));
+      float sp = 0.20 + h*0.50 + fi*0.10;
+      float d = fract(h*7.13 + t*sp*0.5*uDir);
+      float starR = d*d*1.05;
+      float len = (0.008 + 0.14*uStreak*d)*(0.6 + 0.1*fi);
+      float dr = starR - r;
+      float tail = smoothstep(len, 0.0, dr)*step(0.0, dr);
+      float head = smoothstep(0.005 + 0.005*d, 0.0, abs(dr));
+      float wa = min(0.5, (0.0016 + 0.0022*d)/(r*6.28318/rays));
+      float thin = smoothstep(wa*1.6, wa*0.3, abs(fract(cellA) - 0.5));
+      float b2 = (tail*0.70 + head*1.8)*thin*smoothstep(1.0, 0.78, d)*smoothstep(0.0, 0.10, d)*step(0.35, h);
+      vec3 sc2 = palette(fract(h*3.1));
+      sc2 = mix(vec3(1.0), sc2/max(max(sc2.r, max(sc2.g, sc2.b)), 0.25), 0.65);
+      stars += sc2*b2*(0.55 + 0.25*fi);
+    }
+    // 3) the core: glow plus a thin horizontal lens flare
+    vec3 cc = palette(0.85); cc = mix(vec3(1.0), cc/max(max(cc.r, max(cc.g, cc.b)), 0.25), 0.6);
+    float core = exp(-r*8.0)*(0.30 + 0.90*uSwirl) + exp(-abs(c.y)*110.0)*exp(-abs(c.x)*3.2)*0.55*uSwirl;
+    col = tunnel + stars + cc*core;
   } else if(uMode == 12){
     // Liquid → the artwork as molten metal with moving light
     float sc = 3.0*uScale;
     vec2 wp = uv + (vec2(fbm(uv*sc + vec2(t*0.12, 0.0)),
                          fbm(uv*sc + vec2(0.0, t*0.10) + 5.1))-0.5)*w*1.2;
-    vec3 base = grade(texture2D(uTex, mirror(wp)).rgb);
-    float n0 = fbm(uv*sc + t*0.10);
-    float e = 0.012;
-    float nx = fbm((uv+vec2(e,0.0))*sc + t*0.10) - n0;
-    float ny = fbm((uv+vec2(0.0,e))*sc + t*0.10) - n0;
-    vec3 nor = normalize(vec3(-nx/e, -ny/e, 2.2));
+    vec3 base = grade(texture2D(uTex, mirror(fitA(wp))).rgb);
+    // lighting from a smooth two-octave height field (the full fbm broke the surface into facets)
+    vec2 hp = uv*sc*0.8 + t*0.10;
+    float n0 = noise(hp)*0.72 + noise(hp*2.07 + 4.3)*0.28;
+    float e = 0.030;
+    vec2 hx = (uv + vec2(e, 0.0))*sc*0.8 + t*0.10, hy = (uv + vec2(0.0, e))*sc*0.8 + t*0.10;
+    float nx = noise(hx)*0.72 + noise(hx*2.07 + 4.3)*0.28 - n0;
+    float ny = noise(hy)*0.72 + noise(hy*2.07 + 4.3)*0.28 - n0;
+    vec3 nor = normalize(vec3(-nx/e, -ny/e, 1.6));
     vec3 L = normalize(vec3(cos(t*0.20)*0.6, 0.7, 0.55));
     float diff = max(dot(nor, L), 0.0);
     float spec = pow(max(dot(reflect(-L, nor), vec3(0.0,0.0,1.0)), 0.0), 28.0);
@@ -2105,79 +2144,63 @@ vec3 background(vec2 uv, float t, float aspect){
   }
 
   if(uMode == 13){
-    // Reactor → chain reaction: energy flows outward along spiral arms that
-    // twist like a vortex, with bright nodes chasing each other down the chain.
-    // Every angular term uses integer harmonics or cos/sin pairs, so the
-    // pattern is seamless all the way around.
+    // Reactor → a whirlpool of energy with real depth. Two layers of spiral
+    // arms at different depths turn against each other, the near one lit from
+    // one side so the arms read as glowing ridges; the artwork is drawn into
+    // the spiral underneath; a dark core sits inside a bright accretion ring,
+    // and bright nodes chase each other outward along the arms. Every angular
+    // term uses integer harmonics or cos/sin pairs, so it is seamless all round.
     vec2 c = uv - 0.5; c.x *= aspect;
     float r = length(c) + 1e-4;
     float a2 = atan(c.y, c.x);
     float twist = 2.5 + uSwirl*5.0;
-    float sp = a2 + log(r)*twist + t*uDir*1.1;           // spiral coordinate
-    sp += (fbm(c*3.0*uScale + t*0.10) - 0.5)*w*2.0;      // organic wobble
+    float wob = (fbm(c*3.0*uScale + t*0.10) - 0.5)*w*2.0;
+    float sp  = a2 + log(r)*twist + t*uDir*0.9 + wob;                    // near layer
+    float sp2 = a2 - log(r)*twist*0.6 - t*uDir*0.45 + wob*0.5 + 1.3;     // far layer turns the other way
+    float ridge = smoothstep(0.20, 1.0, cos(sp*3.0)*0.5 + 0.5);          // 3 spiral arms
+    float side  = smoothstep(0.20, 1.0, cos(sp*3.0 + 0.9)*0.5 + 0.5);
+    float lit   = clamp(ridge + (ridge - side)*0.9, 0.0, 1.4);           // side light: one flank of each arm glows
     vec2 spv = vec2(cos(sp), sin(sp));
-    float arms  = cos(sp*3.0)*0.5 + 0.5;                 // 3 spiral arms
     float pulse = fbm(spv*1.5 + vec2(r*5.0*uScale - t*0.9, 0.0));
-    float energy = smoothstep(0.15, 1.0, arms)*(0.35 + 0.85*pulse);
-    // chain-reaction nodes racing outward along the arms
+    float energy = ridge*(0.35 + 0.85*pulse);
+    float far = smoothstep(0.45, 1.0, cos(sp2*5.0)*0.5 + 0.5)
+              * (0.5 + 0.5*fbm(vec2(cos(sp2), sin(sp2))*2.0 + r*3.0));   // 5 finer arms deeper down
+    float sw = log(r)*twist*0.35 + t*uDir*0.25;
+    vec2 ac = mat2(cos(sw), -sin(sw), sin(sw), cos(sw))*(uv - 0.5);
+    vec3 art = grade(texture2D(uTex, mirror(fitA(ac*(0.9 + 0.3*r) + 0.5))).rgb);   // the artwork, pulled into the spiral
     float chain = pow(max(0.0, cos(sp*3.0)*0.5 + 0.5), 8.0)
                 * pow(max(0.0, sin(r*(14.0 + 10.0*uStreak) - t*3.2)*0.5 + 0.5), 6.0);
-    col = palette(clamp(energy, 0.0, 1.0))*(0.22 + energy*0.95)
-        + palette(0.92)*chain*1.3
-        + palette(0.85)*exp(-r*10.0)*0.30;               // reactor core glow
+    float depth = smoothstep(0.0, 0.55, r);                              // it all falls into darkness toward the centre
+    col = art*(0.10 + 0.24*depth)*(0.40 + 0.60*far)
+        + palette(0.35)*far*0.16*depth
+        + palette(clamp(energy, 0.0, 1.0))*(0.10 + energy*0.85)*(0.55 + 0.60*lit)*(0.35 + 0.65*depth)
+        + palette(0.92)*chain*1.3;
+    col *= smoothstep(0.022, 0.075, r);                                  // the dark core
+    float ring = exp(-pow((r - 0.058)/0.016, 2.0));
+    col += palette(0.90)*ring*(0.55 + 0.45*sin(a2 - t*2.0*uDir))*0.9 + palette(0.85)*exp(-r*9.0)*0.10;   // accretion ring
   }
 
-  if(uMode == 14){
-    // Echo → the artwork itself, blurred, darkened and slightly zoomed,
-    // filling the whole frame (the classic pillarbox echo behind a poster)
-    vec2 qq = (uv - 0.5) * vec2(aspect, 1.0);
-    qq /= max(aspect, 1.0);                                  // cover-fit, correct aspect
-    qq *= 1.0/(1.06 + 0.10*(uScale - 1.0));                  // slight over-zoom
-    qq += (vec2(fbm(vec2(t*0.020, 3.1)), fbm(vec2(7.7, t*0.016))) - 0.5) * w * 0.10;
-    vec3 e = texture2D(uTex, clamp(qq + 0.5, 0.0, 1.0), 3.0 + uSwirl*3.5).rgb;
-    col = e * (0.30 + 0.35*uStreak);
-  }
-
-  if(uMode == 15){
-    // Datamosh → compression-corruption look: per-block motion vectors drag
-    // the PREVIOUS frame, while a rolling keyframe band + random blocks
-    // re-inject the clean artwork. Feedback-based, so it never repeats.
-    vec2 bs = vec2(24.0, 18.0)*uScale;
-    vec2 cell = floor(uv*bs);
-    float h1 = hash(cell + floor(t*1.5));
-    vec2 mv = (vec2(fbm(cell*0.13 + t*0.20), fbm(cell*0.17 - t*0.15)) - 0.5)
-            * (0.015 + 0.10*w);
-    vec3 prev = texture2D(uPrev, clamp(uv + mv, 0.0, 1.0)).rgb;
-    vec3 srcc = grade(texture2D(uTex, mirror(uv + vec2(wx,wy)*w*0.3)).rgb);
-    float band = smoothstep(0.03, 0.0, abs(fract(uv.y*0.5 + t*0.045) - 0.5) - 0.47);
-    float refresh = max(step(0.988 - uStreak*0.12, h1), band);
-    col = min(mix(prev, srcc, clamp(refresh + 0.025, 0.0, 1.0)), vec3(1.25));
-
-  } else if(uMode == 17){
-    // VHS → tape wobble, rolling tracking band, chroma bleed, scanlines
+  if(uMode == 17){
+    // VHS → tape wobble, chroma bleed, scanlines, soft snow (no rolling tracking band)
     vec2 p = uv;
     float ln = floor(p.y*uRes.y*0.5);
     p.x += (hash(vec2(ln, floor(t*15.0)))-0.5) * 0.0025 * (0.5 + w);
     p.x += sin(p.y*8.0 + t*0.8) * 0.002 * (0.5 + w);
-    float band = fract(p.y - t*0.06);
-    float trk = smoothstep(0.982, 1.0, band);
-    p.x += trk * (hash(vec2(floor(t*30.0), 2.2))-0.5)*0.08;
     float off = 0.0035 + 0.0045*uStreak;
-    vec3 cA = grade(texture2D(uTex, mirror(p)).rgb);
-    vec3 cL = grade(texture2D(uTex, mirror(p - vec2(off,0.0))).rgb);
-    vec3 cR = grade(texture2D(uTex, mirror(p + vec2(off,0.0))).rgb);
+    vec3 cA = grade(texture2D(uTex, mirror(fitA(p))).rgb);
+    vec3 cL = grade(texture2D(uTex, mirror(fitA(p - vec2(off,0.0)))).rgb);
+    vec3 cR = grade(texture2D(uTex, mirror(fitA(p + vec2(off,0.0)))).rgb);
     col = vec3(cR.r*0.9 + cA.r*0.1, cA.g, cL.b*0.9 + cA.b*0.1);
     float l = dot(col, vec3(0.299,0.587,0.114));
     col = mix(vec3(l), col, 0.78);
     col = col*0.92 + 0.045;
     col *= 0.90 + 0.10*sin(uv.y*uRes.y*3.14159);
     col += (hash(uv*uRes.xy*0.7 + floor(t*8.0))-0.5)*0.035*(0.4 + uSwirl);   // snow: calmer reseed + amplitude, YouTube-friendly
-    col = mix(col, vec3(hash(vec2(uv.x*13.0, floor(t*30.0)))), trk*0.45);
     col = mix(col, col.gbr*0.7 + 0.15, smoothstep(0.015, 0.004, uv.y)*0.8);
 
   } else if(uMode == 18){
     // Burn → film burn: warm light leaks drifting over the artwork + flicker
-    vec3 base = grade(texture2D(uTex, mirror(uv + vec2(wx,wy)*w*0.15)).rgb);
+    vec3 base = grade(texture2D(uTex, mirror(fitA(uv + vec2(wx,wy)*w*0.15))).rgb);
     vec3 leak = vec3(0.0);
     for(int i=0;i<3;i++){
       float fi = float(i);
@@ -2193,7 +2216,7 @@ vec3 background(vec2 uv, float t, float aspect){
 
   } else if(uMode == 19){
     // Halftone → the artwork as rotated print dots on warm paper
-    vec3 base = grade(texture2D(uTex, mirror(uv + vec2(wx,wy)*w*0.10)).rgb);
+    vec3 base = grade(texture2D(uTex, mirror(fitA(uv + vec2(wx,wy)*w*0.10))).rgb);
     float cellN = 90.0*uScale;
     float ang = 0.26 + t*0.02*uDir;
     mat2 Rm = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
@@ -2214,7 +2237,7 @@ vec3 background(vec2 uv, float t, float aspect){
     float ph = t*(0.25 + hr*0.5)*uDir + hr*6.28318;
     float amp = (0.05 + 0.28*uStreak) * (0.5 + 0.5*sin(ph));
     vec2 p = vec2(uv.x + sin(ph*1.7)*amp, uv.y);
-    col = grade(texture2D(uTex, mirror(p)).rgb);
+    col = grade(texture2D(uTex, mirror(fitA(p))).rgb);
     float e = abs(fract(uv.y*nB) - 0.5);
     col *= 0.84 + 0.16*smoothstep(0.5, 0.42, e);
   }
@@ -2231,38 +2254,6 @@ vec3 background(vec2 uv, float t, float aspect){
     float rrF = length(vec2((uv.x-0.5)*aspect, uv.y-0.5));
     float win = smoothstep(0.30 + 0.10*uScale, 0.27 + 0.10*uScale, rrF);
     col = max(prevF*(0.88 + 0.10*uSwirl), srcF*win);
-
-  } else if(uMode == 21){
-    // Dither → 1-bit Bayer print: ink on paper, retro-web
-    float pxD = 120.0*uScale;
-    vec2 gD = floor(vec2(uv.x*aspect, uv.y)*pxD);
-    vec2 suD = (gD + 0.5)/pxD; suD.x /= aspect;
-    vec3 baseD = grade(texture2D(uTex, mirror(suD + vec2(wx,wy)*w*0.08)).rgb);
-    float lumD = dot(baseD, vec3(0.299,0.587,0.114));
-    lumD = clamp((lumD - 0.5)*(1.0 + uStreak) + 0.5, 0.0, 1.0);
-    vec2 p4 = mod(gD, 4.0), pp2 = mod(p4, 2.0), ppd = mod(floor(p4*0.5), 2.0);
-    float thrD = ( mod(pp2.x*2.0 + pp2.y*3.0, 4.0)*4.0
-                 + mod(ppd.x*2.0 + ppd.y*3.0, 4.0) + 0.5 ) / 16.0;
-    vec3 inkD = mix(vec3(0.06,0.06,0.08), palette(0.15)*0.4, uSwirl);
-    col = lumD > thrD ? vec3(0.92, 0.90, 0.86) : inkD;
-
-  } else if(uMode == 22){
-    // ASCII → terminal mosaic: glyph-like marks whose density follows luminance
-    float pxA = 64.0*uScale;
-    vec2 gA = floor(vec2(uv.x*aspect, uv.y)*pxA);
-    vec2 cu = fract(vec2(uv.x*aspect, uv.y)*pxA) - 0.5;
-    vec2 suA = (gA + 0.5)/pxA; suA.x /= aspect;
-    vec3 baseA = grade(texture2D(uTex, mirror(suA)).rgb);
-    float lumA = dot(baseA, vec3(0.299,0.587,0.114));
-    float lv = floor(clamp(lumA,0.0,0.999)*5.0);
-    float mG = 0.0;
-    if(lv > 0.5) mG = max(mG, smoothstep(0.14, 0.10, length(cu)));
-    if(lv > 1.5) mG = max(mG, smoothstep(0.09, 0.06, abs(cu.y)) * step(abs(cu.x), 0.34));
-    if(lv > 2.5) mG = max(mG, smoothstep(0.09, 0.06, abs(cu.x)) * step(abs(cu.y), 0.34));
-    if(lv > 3.5) mG = max(mG, step(max(abs(cu.x), abs(cu.y)), 0.36));
-    vec3 glyph = mix(vec3(0.30,1.00,0.55), palette(lumA), uSwirl);
-    col = vec3(0.02, 0.03, 0.02) + glyph * mG * (0.55 + 0.55*lumA);
-    col *= 0.94 + 0.06*sin(uv.y*uRes.y*3.14159);
 
   } else if(uMode == 23){
     // Twinspin → two copies of the artwork spinning in OPPOSITE directions,
@@ -2344,70 +2335,158 @@ vec3 background(vec2 uv, float t, float aspect){
     col += vec3(1.0, 0.98, 0.94)*lineC*dm*0.25;                // bright grains sparkle
   }
 
-  if(uMode == 26){
-    // Topographic — the artwork becomes a living contour map: its luminance
-    // is the terrain, and the contour lines FLOW endlessly through the levels
-    // (a perfectly periodic routine), emanating around the image's bright
-    // peaks like a breathing landscape. Editorial map look.
-    vec3 LWt = vec3(0.299, 0.587, 0.114);
-    vec2 qq2 = (uv - 0.5)*vec2(aspect, 1.0)/max(aspect, 1.0);
-    vec2 su = qq2 + 0.5;
-    su += (vec2(fbm(su*3.0 + t*0.06), fbm(su*3.0 - t*0.05)) - 0.5)*w*0.06;
-    su = clamp(su, 0.0, 1.0);
-    vec3 aBlur = grade(texture2D(uTex, su, 3.5).rgb);      // smoothed terrain
-    float l = dot(aBlur, LWt);
-    // terrain slope: contours only exist where the terrain actually climbs.
-    // On flat plateaus a whole region would cross a level at once and flash
-    // as one giant line → gate the lines by the local gradient instead.
-    float lgx = dot(grade(texture2D(uTex, clamp(su + vec2(0.012, 0.0), 0.0, 1.0), 3.5).rgb), LWt);
-    float lgy = dot(grade(texture2D(uTex, clamp(su + vec2(0.0, 0.012), 0.0, 1.0), 3.5).rgb), LWt);
-    float terr = smoothstep(0.0015, 0.010, length(vec2(lgx - l, lgy - l)));
-    float N = 8.0 + 16.0*clamp(uScale, 0.3, 3.0);
-    float lev = l*N - t*0.35*uDir;                         // the flowing routine
-    float fq = fract(lev);
-    float dd = min(fq, 1.0 - fq);
-    float wd = 0.05 + 0.09*uStreak;
-    float lineT = smoothstep(wd, wd*0.35, dd);
-    float major = step(0.79, fract(floor(lev)/5.0 + 0.01));// every 5th line, bolder
-    vec3 artC = grade(texture2D(uTex, su).rgb);
-    vec3 lineCol = mix(palette(0.50 + l*0.40), artC*1.5, clamp(uSwirl, 0.0, 1.0));
-    col = uBgCol*0.40 + artC*0.06;                         // faint map base
-    col += lineCol*lineT*terr*(0.55 + 0.55*major)*(0.55 + 0.85*uStreak);
-    col += palette(0.85)*smoothstep(0.78, 1.0, l)*0.14;    // summit glow
+  if(uMode == 28){
+    // Burst — a monochrome field of frames, streaks, scan fields, scratches
+    // and glints that rests near black and detonates on the strongest hits
+    // of the track. The hit map comes from an analysis of the whole audio
+    // file (uHit = amplitude, layout seed, age, strength), so preview and
+    // export are frame-exact. Every burst has its own layout, built on the
+    // CPU (uEl); inside a burst the structures stand still and only fade,
+    // which keeps the stream cheap to encode. Frames open windows onto
+    // details of the artwork.
+    float pw  = 0.35 + 1.30*uWarp;                        // Warp = power
+    float A   = clamp(uHit.x*pw, 0.0, 1.5);
+    float A1  = min(A, 1.0);
+    float vis = max(A, 0.07 + 0.06*uHitEnv)*uScale;       // Scale = how much of the layout shows
+    vec2 p = (uv - 0.5)*vec2(aspect, 1.0);
+    float grow = 1.0 - exp(-uHit.z*7.0);                  // 0 at the hit, 1 a moment later: things burst out, then hold
+    float rs = uDiscR*min(aspect, 1.0);                   // disc radius in these units
+    p /= 1.0 + 0.10*A1;                                   // the layout punches outward on the hit
+    { float ra = uLay.x + uLay.y*grow, cr = cos(ra), sr = sin(ra);
+      p = mat2(cr, -sr, sr, cr)*p + uLay.zw*grow; }       // each layout has its own tilt, spin and drift
+    p += vec2(sin(t*0.07), cos(t*0.05))*0.006;
+    float gw = 0.6 + 1.4*uStreak;                         // Streak = line weight and glow
+    float lumA = 0.0, lumB = 0.0;                         // structures, split over two tones of the artwork
+    vec3 wnd = vec3(0.0);
+    for(int i = 0; i < 40; i++){
+      vec4 ea = uEl[i*2], eb = uEl[i*2 + 1];
+      float e = smoothstep(ea.w*0.90, ea.w*0.90 + 0.10, vis);
+      if(e <= 0.0) continue;
+      vec2 c = ea.yz*vec2(aspect, 1.0);
+      vec2 q2 = p - c;
+      float add = 0.0;
+      if(ea.x < 1.5){                                     // streak (0 horizontal, 1 vertical)
+        float hz = 1.0 - ea.x;
+        float perp = mix(q2.x, q2.y, hz), along = mix(q2.y, q2.x, hz);
+        float hl = eb.x*mix(1.0, aspect, hz), th = eb.y*gw;
+        float d = abs(perp);
+        if(eb.z > 0.5){                                   // comb: several parallel lines
+          float k = clamp(floor(perp/eb.w + 0.5), 0.0, eb.z);
+          d = abs(perp - k*eb.w);
+        }
+        float m = smoothstep(hl, hl*0.86, abs(along));
+        add = e*m*(smoothstep(th, th*0.30, d) + 0.20*uStreak*exp(-d*80.0));
+      } else if(ea.x < 2.5){                              // frame + window onto the artwork
+        vec2 b2 = abs(q2) - eb.xy*vec2(1.0, 1.0);
+        float sd = length(max(b2, 0.0)) + min(max(b2.x, b2.y), 0.0);
+        float th = 0.0012*gw;
+        add = e*smoothstep(th, th*0.30, abs(sd));
+        if(sd < 0.0){
+          vec3 a3 = grade(texture2D(uTex, clamp(eb.zw + q2*0.75, 0.0, 1.0)).rgb);
+          float l3 = dot(a3, vec3(0.299, 0.587, 0.114));
+          float ln = clamp((l3 - uArtRange.x)/max(uArtRange.y - uArtRange.x, 0.04), 0.0, 1.0);   // auto levels: flat or dark artworks still read
+          a3 = mix(vec3(ln), a3*(ln/max(l3, 0.02)), uSwirl);
+          wnd = max(wnd, min(a3, 1.0)*e);
+        }
+      } else if(ea.x < 3.5){                              // scan field
+        vec2 n2 = q2/eb.xy;
+        float inb = step(abs(n2.x), 1.0)*step(abs(n2.y), 1.0);
+        float fade = 0.5 - 0.5*n2.x*eb.w;
+        add = e*inb*step(0.5, fract(p.y*eb.z))*fade*0.55;
+      } else if(ea.x < 4.5){                              // curved scratch
+        vec2 dir = vec2(cos(eb.y), sin(eb.y));
+        float d = abs(length(p - dir*(eb.x + eb.z)) - eb.x);
+        float tg = dot(p, vec2(-dir.y, dir.x));
+        add = e*smoothstep(eb.w, eb.w*0.4, abs(tg))*smoothstep(0.0011*gw, 0.0003*gw, d)*0.85;
+      } else if(ea.x < 5.5){                              // four-point glint
+        vec2 dq = q2;
+        if(eb.y > 0.5) dq = vec2(dq.x + dq.y, dq.x - dq.y)*0.7071;
+        float sz = eb.x;
+        add = e*(exp(-abs(dq.x)*140.0/sz)*exp(-abs(dq.y)*11.0/sz) + exp(-abs(dq.y)*140.0/sz)*exp(-abs(dq.x)*11.0/sz))*(0.8 + 0.8*uStreak);
+      } else if(ea.x < 6.5){                              // ray: shoots out from behind the disc
+        vec2 dirv = vec2(cos(eb.x), sin(eb.x));
+        float al = dot(q2, dirv) - eb.y*rs;
+        float pd = abs(q2.x*dirv.y - q2.y*dirv.x);
+        float len = max(eb.z*grow, 0.0005);
+        add = e*step(0.0, al)*smoothstep(len, len*0.80, al)*(smoothstep(eb.w*gw, eb.w*gw*0.30, pd) + 0.18*uStreak*exp(-pd*90.0));
+      } else {                                            // ring: a shockwave leaving the disc
+        float dR = abs(length(q2) - (eb.x*rs + eb.z*grow));
+        float dash = eb.w > 0.5 ? step(0.5, fract(atan(q2.y, q2.x)*eb.w/6.28318 + ea.w*7.0)) : 1.0;
+        add = e*dash*(smoothstep(eb.y*gw, eb.y*gw*0.30, dR) + 0.15*uStreak*exp(-dR*70.0));
+      }
+      float tone = step(0.5, fract(ea.w*3.7));
+      lumA += add*(1.0 - tone); lumB += add*tone;
+    }
+    // dust, fixed per burst
+    vec2 gd = floor(p*52.0), gf = fract(p*52.0) - 0.5;
+    float hd = hash(gd + uHit.y*1.7);
+    lumA += step(0.95, hd)*smoothstep(0.16, 0.05, length(gf + (vec2(hash(gd + 3.3), hash(gd + 8.1)) - 0.5)*0.6))*min(vis, 1.0)*0.9;
+
+    // Swirl = how much of the artwork's own palette goes into the scene:
+    // two bright tones for the structures, its darkest tone for the ground,
+    // its lightest for the flash and for the inverted frame. At 0 it is black and white.
+    float sq = fract(uHit.y*0.37);
+    vec3 cA = palette(0.45 + 0.50*sq), cB = palette(0.95 - 0.45*sq);
+    cA /= max(max(cA.r, max(cA.g, cA.b)), 0.25);
+    cB /= max(max(cB.r, max(cB.g, cB.b)), 0.25);
+    vec3 tA = mix(vec3(1.0), cA, uSwirl), tB = mix(vec3(1.0), cB, uSwirl);
+    vec3 ground = mix(uBgCol*0.10 + vec3(0.006), palette(0.0)*0.16 + vec3(0.004), uSwirl);
+    vec3 cL = palette(0.999);
+    cL = mix(vec3(1.0), cL/max(max(cL.r, max(cL.g, cL.b)), 0.25), 0.75);   // lightest tone, lifted to full brightness
+    vec3 lite   = mix(vec3(0.96), cL, uSwirl);
+    vec3 ink    = mix(vec3(0.0), palette(0.0)*0.40, uSwirl);
+    vec3 stru = wnd*A1*0.80 + (tA*lumA + tB*lumB)*(0.30 + 0.70*A1);
+    if(uHit.w > 0.90 && uHit.z < 0.14 && uWarp > 0.45){
+      col = mix(lite, ink, min(dot(stru, vec3(0.299, 0.587, 0.114)), 1.0));   // strongest hits: a light frame with dark structures
+    } else {
+      col = ground + stru + lite*pow(min(A, 1.3), 6.0)*0.55;
+    }
   }
 
-  if(uMode == 27){
-    // CRT — the artwork on a real tube monitor: barrel-curved glass, phosphor
-    // RGB triads, scanlines, gun misconvergence, and the repeating routine:
-    // a hum bar rolling down the screen forever, plus a soft glass highlight.
-    // (VHS is the tape; this is the television.)
-    vec2 cc = (uv - 0.5)*2.0;
-    float r2 = dot(cc, cc);
-    vec2 cuv = uv + cc*r2*(0.03 + 0.09*w);               // Warp = tube curvature
-    vec2 bb = abs(cuv - 0.5)*2.0;
-    float inside = step(max(bb.x, bb.y), 1.0);
-    vec2 qq2 = (cuv - 0.5)*vec2(aspect, 1.0)/max(aspect, 1.0);
-    vec2 su = clamp(qq2 + 0.5, 0.0, 1.0);
-    float mc = uSwirl*0.0045*(0.3 + r2);                 // Swirl = gun misconvergence
-    vec3 art;
-    art.r = grade(texture2D(uTex, clamp(su + vec2(mc, 0.0), 0.0, 1.0)).rgb).r;
-    art.g = grade(texture2D(uTex, su).rgb).g;
-    art.b = grade(texture2D(uTex, clamp(su - vec2(mc, 0.0), 0.0, 1.0)).rgb).b;
-    float scan = 1.0 - (0.10 + 0.22*uStreak)*(0.5 + 0.5*sin(cuv.y*uRes.y*2.83));
-    float px3 = cuv.x*uRes.x*0.35*clamp(uScale, 0.4, 2.5);
-    vec3 tri = clamp(vec3(sin(px3*2.094), sin(px3*2.094 + 2.094), sin(px3*2.094 + 4.188))*0.30 + 0.85, 0.0, 1.0);
-    float bar = fract(cuv.y*0.9 - t*0.12*uDir);          // the rolling routine
-    float hum = exp(-pow((bar - 0.5)*4.0, 2.0));
-    float flick = 1.0;                                   // flicker removed: it cost compression dearly for a 1.5% shimmer
-    col = art*scan*flick;
-    col *= tri;
-    col *= 1.0 - hum*(0.10 + 0.20*uStreak);
-    col += vec3(0.9, 0.95, 1.0)*hum*hum*0.05;            // faint leading glow on the bar
-    float gh = pow(max(0.0, 1.0 - length(cc - vec2(-0.45, -0.62))), 3.0);
-    col += vec3(1.0)*gh*0.09;                            // glass reflection
-    col *= smoothstep(1.06, 0.82, max(bb.x, bb.y));      // tube corner falloff
-    col *= inside;
-    col += (1.0 - inside)*uBgCol*0.25;                   // bezel
+  if(uMode == 29){
+    // Eclipse — a soft mass of light flows around the dark disc like a
+    // crescent around an eclipse: it swells, sheds drops that orbit and
+    // merge back, and never leaves the rim. Everything is driven by the
+    // disc angle, so the motion closes exactly with every revolution
+    // (loops cleanly at any length). The void is the record itself.
+    vec2 q = (uv - 0.5)*vec2(aspect, 1.0)/min(aspect, 1.0);
+    float R  = (uArt == 2) ? uDiscR*1.46 : uDiscR;             // a card gets a circle around its corners
+    if(uArt == 4){ vec3 sg = sleeveGeo(); R = sg.x; q.x -= sg.z; }   // with the sleeve, the light wraps the record that sticks out
+    float r0 = length(q);
+    float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/14.0 + 0.5));   // whole orbits per disc turn (keeps the loop exact); about 14 s each at the default Speed
+    float ph = uAngle*k*uDir;
+    vec2 lp  = vec2(cos(uAngle), sin(uAngle))*0.6;             // looped noise drift
+    // the fluid lives in a gently warped space: edges wander, nothing is a clean circle
+    vec2 qw  = q + (vec2(fbm(q*2.2 + lp), fbm(q*2.2 - lp + 9.1)) - 0.5)*0.08*(0.3 + 1.2*w);
+    float r  = length(qw), a = atan(qw.y, qw.x);
+    float da = a - ph; da = atan(sin(da), cos(da));
+    float span = 1.20 + 0.45*sin(uAngle*2.0 + 0.6);
+    float thick = (0.05 + 0.22*uStreak)*exp(-pow(da/span, 2.0)*1.6);   // Streak = how thick the crescent is
+    float nz  = fbm(q*3.0 + lp + vec2(0.0, 3.7)) - 0.5;
+    float nz2 = fbm(q*7.5 - lp*1.3) - 0.5;
+    float F = thick - (r - R) + nz*0.10*(0.3 + 1.4*w) + nz2*0.035*w;   // Warp = how restless the fluid is
+    for(int i = 0; i < 4; i++){
+      float fi = float(i);
+      float ai = ph + 2.1 + fi*1.25 + 0.8*sin(uAngle*(fi + 1.0) + fi*2.0);
+      float ri = R + 0.045 + 0.06*fi + 0.035*sin(uAngle*(fi + 2.0) + fi);
+      float si = (0.030 + 0.022*fract(fi*0.618 + 0.3))*(0.5 + 0.7*uScale);   // Scale = size of the drops
+      vec2 nr = vec2(cos(ai), sin(ai)), dv = qw - nr*ri;
+      float dl = length(vec2(dot(dv, nr), dot(dv, vec2(-nr.y, nr.x))*0.50));   // drops stretch along their orbit
+      F = smaxE(F, si - dl, 0.075);
+    }
+    float soft = 0.010 + 0.012*(1.0 - uStreak);
+    float outside = smoothstep(R*0.992, R*1.006, r0);
+    float m = smoothstep(-soft, soft, F)*outside;
+    float core = smoothstep(0.0, 0.11, F)*(0.80 + 0.35*fbm(qw*5.0 + lp*2.0));
+    vec3 cL = palette(0.999); cL = mix(vec3(1.0), cL/max(max(cL.r, max(cL.g, cL.b)), 0.25), 0.70);
+    vec3 cM = palette(0.55);  cM = cM/max(max(cM.r, max(cM.g, cM.b)), 0.25);
+    vec3 liteC = mix(vec3(1.0), cL, uSwirl);                              // Swirl = colors of the artwork
+    vec3 edgeC = mix(vec3(0.58, 0.63, 0.86), cM*0.85, uSwirl);
+    vec3 ground = mix(uBgCol*0.10 + vec3(0.006), palette(0.0)*0.14 + vec3(0.004), uSwirl);
+    col = mix(ground, mix(edgeC, liteC, core), m);
+    col += liteC*exp(-max(-F, 0.0)*16.0)*0.09*outside*(1.0 - m);          // soft halo off the mass
+    col += liteC*exp(-abs(r0 - R)*70.0)*0.05;                             // thin rim light all around the void
+    col *= mix(0.25, 1.0, smoothstep(R*0.90, R*1.0, r0));                 // the void itself stays dark
   }
 
   col *= 1.0 + uBeatBg*0.25;   // the background breathes with the Beat dial
@@ -2415,6 +2494,51 @@ vec3 background(vec2 uv, float t, float aspect){
   vec2 dd = uv - 0.5;
   col *= 1.0 - dot(dd,dd)*0.50;
   return col;
+}
+
+// A vinyl record centred at the origin of qc: a black grooved disc under a light
+// that stays fixed in the room, with the artwork as the spinning centre label.
+// Returns its color; cov is how much of the pixel it covers (0 outside).
+vec3 vinylRecord(vec2 qc, float R, out float cov){
+  float r = length(qc);
+  cov = smoothstep(R + 0.0025, R - 0.0025, r);
+  if(cov <= 0.0) return vec3(0.0);
+  float rn = r/R;                                              // 0 at the spindle, 1 at the rim
+  float ca2 = cos(uAngle), sa2 = sin(uAngle);
+  vec2 rq = vec2(qc.x*ca2 - qc.y*sa2, qc.x*sa2 + qc.y*ca2)/R;      // record space: turns with the disc
+  const float LAB = 0.335;                                     // label radius, as on a 12 inch record
+  // grooves: fine concentric lines, faded out when they would be thinner than the pixels can show
+  float pxPer = R*min(uRes.x, uRes.y)/150.0;
+  float gAmp = smoothstep(1.6, 3.2, pxPer);
+  float gv = 0.5 + 0.5*sin(rn*942.5);
+  // quiet bands between the tracks, at fixed places on this record
+  float gaps = 0.0;
+  for(int i = 0; i < 4; i++){
+    float gi = LAB + 0.11 + (0.965 - LAB - 0.14)*(float(i) + 0.25 + 0.5*hash(vec2(float(i), 4.7)))/4.0;
+    gaps = max(gaps, smoothstep(0.0075, 0.0030, abs(rn - gi)));
+  }
+  float inGrooves = smoothstep(LAB + 0.070, LAB + 0.078, rn)*smoothstep(0.972, 0.964, rn)*(1.0 - gaps);
+  // light: two opposite wedges across the grooves; a slight warp makes them sway as the record turns
+  float ang = atan(qc.y, qc.x) + 0.05*sin(uAngle + rn*2.2);
+  float lobe = abs(cos(ang - 2.25));
+  float sheen = pow(lobe, 22.0)*0.85 + pow(lobe, 4.0)*0.10;
+  float wear = 0.80 + 0.40*fbm(rq*5.0 + vec2(rn*18.0, 0.0));   // fine wear on the surface, turning with the disc
+  vec3 vin = vec3(0.014, 0.014, 0.016);
+  vin += vec3(0.95, 0.97, 1.00)*sheen*wear*(0.05 + 0.20*inGrooves*mix(0.75, 0.35 + 0.65*gv, gAmp));
+  vin += vec3(0.020)*inGrooves*(gv - 0.5)*gAmp;                // the grooves stay faintly visible out of the light
+  vin += vec3(1.0)*sheen*0.07*(1.0 - inGrooves);               // dead wax and lead-in are smooth and glossy
+  vin += vec3(1.0)*smoothstep(0.0040, 0.0, abs(rn - (LAB + 0.045)))*0.035;   // run-out groove
+  vin += vec3(1.0)*smoothstep(0.0060, 0.0, abs(rn - 0.990))*(0.05 + 0.25*sheen);   // rim bevel
+  // centre label: the artwork, turning with the record
+  vec2 tuv = clamp(rq/LAB*0.5 + 0.5, 0.0, 1.0);
+  vec3 lab = texture2D(uTex, tuv).rgb;
+  lab *= 1.0 - 0.22*smoothstep(LAB*0.90, LAB, rn);              // the paper darkens toward its edge
+  lab += vec3(1.0)*sheen*0.045;                                 // the label sits in the same light
+  vec3 art = mix(vin, lab, smoothstep(LAB + 0.0035, LAB - 0.0035, rn));
+  art *= 1.0 - 0.55*smoothstep(0.0050, 0.0, abs(rn - LAB));     // thin seam where the label meets the vinyl
+  art = mix(art, vec3(0.012), smoothstep(0.026, 0.021, rn));    // spindle hole
+  art += vec3(1.0)*smoothstep(0.0040, 0.0, abs(rn - 0.027))*0.10;
+  return art;
 }
 
 void main(){
@@ -2432,7 +2556,7 @@ void main(){
     vec2 dq = abs(q - vec2(0.0,-0.015)) - vec2(h);
     float sd = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0);
     float sh = smoothstep(h*0.35, 0.0, sd) * step(0.0, sd);
-    if(uMode != 26) col = mix(col, col*0.30, sh*0.70);   // no cast shadow on the topo map
+    col = mix(col, col*0.30, sh*0.70);
 
     float box = max(abs(q.x), abs(q.y));
     if(box < h + 0.004){
@@ -2458,7 +2582,7 @@ void main(){
     float R = uDiscR*(1.0 + kick*0.040);                     // breathes with the Beat dial
 
     float sh = smoothstep(R*1.30, R*0.92, length(q - vec2(0.0,-0.018)));
-    if(uMode != 26) col = mix(col, col*0.30, sh*0.75);   // no cast shadow on the topo map
+    col = mix(col, col*0.30, sh*0.75);
 
     if(r < R + 0.006){
       vec2 dLoc = q/R;
@@ -2502,6 +2626,47 @@ void main(){
 
       float aa2 = smoothstep(R + 0.0025, R - 0.0025, r);
       col = mix(col, art, aa2);
+    }
+
+  } else if(uArt == 3){
+    // ── Vinyl record on its own ──
+    vec2 q = (gl_FragCoord.xy - 0.5*uRes)/min(uRes.x, uRes.y);
+    float R = uDiscR;
+    float sh = smoothstep(R*1.30, R*0.92, length(q - vec2(0.0,-0.018)));
+    col = mix(col, col*0.30, sh*0.75);
+    float cov;
+    vec3 rec = vinylRecord(q, R, cov);
+    col = mix(col, rec, cov);
+
+  } else if(uArt == 4){
+    // ── Sleeve: the artwork as the record cover, the record pulled halfway out and spinning ──
+    vec2 q = (gl_FragCoord.xy - 0.5*uRes)/min(uRes.x, uRes.y);
+    vec3 geo = sleeveGeo();
+    float Rr = geo.x, hs = 1.04*Rr;
+    vec2 sc = vec2(geo.y, 0.0), rc = vec2(geo.z, 0.0);
+    // shadows on the background: under the record and under the sleeve
+    float shR = smoothstep(Rr*1.28, Rr*0.92, length(q - rc - vec2(0.0, -0.016)));
+    vec2 dq = abs(q - sc - vec2(0.0, -0.014)) - vec2(hs);
+    float sdS = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0);
+    float shS = smoothstep(hs*0.30, 0.0, sdS);
+    col = mix(col, col*0.30, max(shR*0.75, shS*0.70));
+    // the record, behind the sleeve
+    float cov;
+    vec3 rec = vinylRecord(q - rc, Rr, cov);
+    float mouth = sc.x + hs;                                              // right edge of the sleeve
+    rec *= 1.0 - 0.55*smoothstep(Rr*0.10, 0.0, q.x - mouth);              // the sleeve casts a soft shadow onto the record
+    col = mix(col, rec, cov);
+    // the sleeve on top
+    vec2 loc = (q - sc)/hs;                                               // -1..1 across the cover
+    float box = max(abs(loc.x), abs(loc.y));
+    if(box < 1.0 + 0.006/hs){
+      vec3 cover = texture2D(uTex, clamp(loc*0.5 + 0.5, 0.0, 1.0)).rgb;
+      cover *= 0.97 + 0.05*(loc.y - loc.x)*0.5;                            // a soft light across the cardboard
+      cover *= 1.0 - 0.10*smoothstep(0.975, 1.0, box);                     // edges of the board
+      cover *= 1.0 - 0.22*smoothstep(0.990, 0.975, loc.x)*smoothstep(0.955, 0.975, loc.x);   // the opening: a fine line along the right side
+      cover += vec3(1.0, 0.98, 0.95)*smoothstep(0.992, 1.0, box)*0.05;
+      float aaS = smoothstep(1.0 + 0.0022/hs, 1.0 - 0.0022/hs, box);
+      col = mix(col, cover, aaS);
     }
   }
 
@@ -2592,7 +2757,8 @@ function bindQuad(prog){
 const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
- "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth"]
+ "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -2656,6 +2822,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.activeTexture(gl.TEXTURE0);
 
+let artLo = 0, artHi = 1;   // luminance range of the artwork, set in buildDepth
 function buildDepth(img){
   // Pseudo-depth from the artwork: blurred luminance (bright = near) blended
   // with a center bias, normalized. 256px is plenty for smooth parallax.
@@ -2670,6 +2837,9 @@ function buildDepth(img){
   let lum = new Float32Array(N*N);
   for(let i = 0; i < N*N; i++)
     lum[i] = (d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114)/255;
+  // luminance range of this artwork (5th..95th percentile) → auto levels for Burst windows
+  { const ls = Float32Array.from(lum).sort();
+    artLo = ls[Math.floor(ls.length*0.05)]; artHi = ls[Math.floor(ls.length*0.95)]; }
   const tmp = new Float32Array(N*N);
   const R = 8, W2 = 2*R + 1;
   for(let pass = 0; pass < 3; pass++){
@@ -2785,38 +2955,32 @@ function applyPalette(pal, keepBase){
 }
 
 // ── state + per-effect slider defaults ──
-const st = {mode:-1, dir:1, art:"disc", renderMode:"loop", ca:0, glow:0, grain:0, vig:0,
+const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", ca:0, glow:0, grain:0, vig:0,
             speed:1, warp:0.35, streak:0.65, swirl:0.5, scale:1, trail:0, beat:0};
 const MODE_DEFAULTS = {
-  "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0},
-  "0": {speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0},
-  "1": {speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0},
-  "2": {speed:1,   warp:0.40, streak:0.30, swirl:0.6, scale:1,   trail:0},
-  "3": {speed:1,   warp:0.50, streak:0.30, swirl:0.4, scale:1,   trail:0},
-  "4": {speed:1,   warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.15},
-  "5": {speed:0.8, warp:0.50, streak:0.30, swirl:0.5, scale:1,   trail:0},
-  "6": {speed:1,   warp:0.30, streak:0.30, swirl:0.4, scale:1,   trail:0.35},
-  "7": {speed:0.8, warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.20},
-  "8": {speed:1.2, warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0.25},
-  "9": {speed:1,   warp:0.40, streak:0.30, swirl:0.7, scale:1,   trail:0.75},
-  "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20},
-  "11":{speed:1.2, warp:0.30, streak:0.55, swirl:0.5, scale:1,   trail:0.50},
-  "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0},
-  "13":{speed:1,   warp:0.40, streak:0.60, swirl:0.6, scale:1,   trail:0.50},
-  "14":{speed:0.5, warp:0.20, streak:0.60, swirl:0.5, scale:1,   trail:0},
-  "15":{speed:1,   warp:0.50, streak:0.30, swirl:0.5, scale:1,   trail:0},
-  "17":{speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0},
-  "18":{speed:0.8, warp:0.40, streak:0.60, swirl:0.5, scale:1,   trail:0.10},
-  "19":{speed:0.5, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0},
-  "20":{speed:1,   warp:0.30, streak:0.50, swirl:0.5, scale:1,   trail:0.15},
-  "16":{speed:1,   warp:0.30, streak:0.40, swirl:0.5, scale:1,   trail:0},
-  "21":{speed:0.5, warp:0.20, streak:0.40, swirl:0.3, scale:1,   trail:0},
-  "22":{speed:0.5, warp:0.20, streak:0.30, swirl:0.3, scale:1,   trail:0},
-  "23":{speed:0.7, warp:0.30, streak:0.40, swirl:0.6, scale:1,   trail:0.20},
-  "24":{speed:0.6, warp:0.50, streak:0.40, swirl:0.5, scale:1,   trail:0},
-  "25":{speed:0.6, warp:0.30, streak:0.50, swirl:0.4, scale:1,   trail:0.20},
-  "26":{speed:0.6, warp:0.35, streak:0.55, swirl:0.6, scale:1,   trail:0.15},
-  "27":{speed:0.6, warp:0.50, streak:0.60, swirl:0.4, scale:1,   trail:0}
+  "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
+  "0": {speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.15, grain:0, vig:0.2},
+  "2": {speed:1,   warp:0.40, streak:0.30, swirl:0.6, scale:1,   trail:0, ca:0.1, glow:0.1, grain:0, vig:0.2},
+  "3": {speed:1,   warp:0.50, streak:0.30, swirl:0.4, scale:1,   trail:0, ca:0.08, glow:0.1, grain:0, vig:0.2},
+  "4": {speed:1,   warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.15, ca:0, glow:0.25, grain:0, vig:0.15},
+  "6": {speed:1,   warp:0.30, streak:0.30, swirl:0.4, scale:1,   trail:0.35, ca:0.12, glow:0.2, grain:0, vig:0.1},
+  "7": {speed:0.8, warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0.1, glow:0.15, grain:0, vig:0.15},
+  "8": {speed:1.2, warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0.25, ca:0.25, glow:0.05, grain:0, vig:0.15},
+  "9": {speed:1,   warp:0.40, streak:0.30, swirl:0.7, scale:1,   trail:0.75, ca:0, glow:0.3, grain:0, vig:0.1},
+  "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0.1, glow:0.12, grain:0, vig:0.15},
+  "11":{speed:1.2, warp:0.30, streak:0.55, swirl:0.5, scale:1,   trail:0.50, ca:0.1, glow:0.3, grain:0, vig:0},
+  "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.2, grain:0, vig:0.2},
+  "13":{speed:1,   warp:0.40, streak:0.60, swirl:0.6, scale:1,   trail:0.50, ca:0.08, glow:0.2, grain:0, vig:0.15},
+  "17":{speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0, ca:0.25, glow:0.05, grain:0.1, vig:0.25},
+  "18":{speed:0.8, warp:0.40, streak:0.60, swirl:0.5, scale:1,   trail:0.10, ca:0.05, glow:0.2, grain:0.08, vig:0.3},
+  "19":{speed:0.5, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0.2},
+  "20":{speed:1,   warp:0.30, streak:0.50, swirl:0.5, scale:1,   trail:0.15, ca:0.1, glow:0.1, grain:0, vig:0.15},
+  "16":{speed:1,   warp:0.30, streak:0.40, swirl:0.5, scale:1,   trail:0, ca:0.05, glow:0.2, grain:0, vig:0.1},
+  "23":{speed:0.7, warp:0.30, streak:0.40, swirl:0.6, scale:1,   trail:0.20, ca:0.08, glow:0.1, grain:0, vig:0.15},
+  "24":{speed:0.6, warp:0.50, streak:0.40, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.1, grain:0, vig:0.25},
+  "25":{speed:0.6, warp:0.30, streak:0.50, swirl:0.4, scale:1,   trail:0.20, ca:0, glow:0.3, grain:0, vig:0.1},
+  "28":{speed:1.15,warp:0.60, streak:0.50, swirl:0.80,scale:1,   trail:0.55, ca:0.1, glow:0.25, grain:0, vig:0.1},
+  "29":{speed:0.6, warp:0.50, streak:0.50, swirl:0.70,scale:1,   trail:0, ca:0, glow:0.25, grain:0.1, vig:0.15},
 };
 
 const SLIDERS = {
@@ -2840,7 +3004,11 @@ for(const k in SLIDERS){
 }
 function applyModeDefaults(m){
   const d = MODE_DEFAULTS[String(m)];
-  for(const k of ["speed","warp","streak","swirl","scale","trail"]){ st[k]=d[k]; syncSlider(k,d[k]); }
+  // every effect brings its complete look: its six controls and its own finishing (aberration, glow, grain, vignette)
+  for(const k of ["speed","warp","streak","swirl","scale","trail","ca","glow","grain","vig"]){
+    const v = d[k] === undefined ? 0 : d[k];
+    st[k] = v; syncSlider(k, v);
+  }
 }
 document.getElementById("fxRender").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
@@ -2851,8 +3019,8 @@ document.getElementById("fxRender").addEventListener("click", e=>{
 function exportDurationSec(){
   return S.audioLoaded ? (S.trimEnd - S.trimStart) * S.audioDuration : S.silentDuration;
 }
-const FX_NEEDS_FULL = {2:"Vortex",3:"Ripple",6:"Tunnel",7:"Kaleido",9:"Spectrum",15:"Datamosh",16:"Feedback",23:"Twinspin",24:"Depth 3D"};
-let fxFullHintShown = false;
+const FX_NEEDS_FULL = {2:"Vortex",3:"Ripple",6:"Tunnel",7:"Kaleido",9:"Spectrum",16:"Feedback",23:"Twinspin",24:"Depth 3D"};
+let fxFullHintShown = false, fxBurstHintShown = false;
 document.getElementById("fxModes").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   st.mode = parseInt(b.dataset.m,10);
@@ -2863,6 +3031,10 @@ document.getElementById("fxModes").addEventListener("click", e=>{
      && exportDurationSec() > 61){
     fxFullHintShown = true;
     showToast(FX_NEEDS_FULL[st.mode] + " rotates continuously → for a full song, set Export render to Full render so the motion never repeats.");
+  }
+  if(st.mode === 28 && !fxBurstHintShown){
+    fxBurstHintShown = true;
+    showToast("Burst follows the hits of your track \u2192 press Preview to see it in sync. It always exports as Full render.");
   }
   if(!animId) draw();
 });
@@ -2875,14 +3047,17 @@ document.getElementById("fxArt").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   st.art = b.dataset.a;
   document.querySelectorAll("#fxArt button").forEach(x=>x.classList.toggle("on", x===b));
+  document.getElementById("fxVinylOpt").style.display = st.art === "vinyl" ? "" : "none";   // Record / Sleeve belongs to Vinyl
+  if(!animId) draw();
+});
+document.getElementById("fxVinylOpt").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  st.sleeve = b.dataset.v === "sleeve";
+  document.querySelectorAll("#fxVinylOpt button").forEach(x=>x.classList.toggle("on", x===b));
   if(!animId) draw();
 });
 document.getElementById("fxRstFx").addEventListener("click", ()=>{
-  applyModeDefaults(st.mode);                       // per-effect sliders back to the effect's defaults
-  for(const k of ["ca","glow","grain","vig"]){      // finishing dials back to neutral zero
-    st[k] = 0;
-    syncSlider(k, 0);
-  }
+  applyModeDefaults(st.mode);                       // everything back to the effect's own look, finishing included
   if(!animId) draw();
 });
 document.getElementById("fxRstPal").addEventListener("click", ()=>{
@@ -2911,6 +3086,344 @@ function ensureAudio(){
     fxA.analyser.connect(fxA.ctx.destination);
   } catch(e){ console.warn("FX audio graph:", e); }
 }
+
+// ═══════════ BURST: hit-synced scene ═══════════
+// BURST-BEGIN
+// Layout of one burst: up to 40 elements, 2 vec4 each, generated on the CPU from
+// the burst's seed (seeded PRNG, so preview and export draw the same picture).
+// Seven compositions take turns so two bursts in a row never look alike.
+// Row A = (type, x, y, threshold)  x,y in -0.5..0.5 of the frame
+// Row B = type-specific            0 h-streak 1 v-streak: half length, thickness, comb count, comb gap
+//                                  2 frame: half w, half h, artwork crop u, v
+//                                  3 scan field: half w, half h, line freq, fade direction
+//                                  4 scratch: radius, direction angle, offset, visible span
+//                                  5 glint: size, diagonal flag
+//                                  6 ray: angle, start (in disc radii), length, thickness
+//                                  7 ring: radius (in disc radii), thickness, expansion, dash count (0 = solid)
+const FX_BURST_N = 40, FX_BURST_FAMILIES = 7;
+function fxBurstRng(seed){
+  let a = (seed * 2654435761) >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+                 t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+// 0 grid, 1 rays, 2 rings, 3 bars, 4 diagonal, 5 flash (the light inverted frame), 6 mosaic.
+// Every run of seven bursts plays all seven once, in a shuffled order, and never repeats across the seam.
+function fxBurstFamily(seed){
+  const F = FX_BURST_FAMILIES, i = Math.max(0, seed - 1), block = Math.floor(i / F);
+  const perm = (b) => { const r = fxBurstRng(7919 + b * 31), p = [0, 1, 2, 3, 4, 5, 6];
+    for(let k = F - 1; k > 0; k--){ const j = Math.floor(r() * (k + 1)); const x = p[k]; p[k] = p[j]; p[j] = x; } return p; };
+  const p = perm(block);
+  if(block > 0 && p[0] === perm(block - 1)[F - 1]){ const x = p[0]; p[0] = p[1]; p[1] = x; }
+  return p[i % F];
+}
+// aspect = frame width / height, rs = disc radius in frame-height units
+function fxBurstLayout(seed, aspect, rs){
+  const rnd = fxBurstRng(seed), fam = fxBurstFamily(seed);
+  const el = new Float32Array(FX_BURST_N * 8), lay = [0, 0, 0, 0];
+  for(let i = 0; i < FX_BURST_N; i++) el[i * 8 + 3] = 9;      // unused slots: a threshold that is never reached
+  let n = 0;
+  const put = (type, x, y, th, b0, b1, b2, b3) => { if(n < FX_BURST_N){ el.set([type, x, y, th, b0, b1, b2, b3], n * 8); n++; } };
+  const pol = (r, ang) => [r * Math.cos(ang) / aspect, r * Math.sin(ang)];        // polar position around the disc
+  const TAU = 6.28318;
+  const grid = (dense) => {
+    const anchors = [[(rnd() - 0.5) * 0.7, (rnd() - 0.5) * 0.6], [(rnd() - 0.5) * 0.8, (rnd() - 0.5) * 0.7]];
+    for(let k = 0; k < 2; k++){
+      const ax = anchors[k][0], ay = anchors[k][1], th = k === 0 ? 0.04 : 0.30;
+      put(0, (rnd() - 0.5) * 0.3, ay, th, 0.30 + 0.25 * rnd(), 0.0016 + 0.002 * rnd(), 0, 0);
+      put(1, ax, (rnd() - 0.5) * 0.3, th + 0.03, 0.28 + 0.25 * rnd(), 0.0014 + 0.002 * rnd(), 0, 0);
+      put(5, ax, ay, th + 0.02, 0.8 + 1.0 * rnd(), rnd() > 0.5 ? 1 : 0, 0, 0);
+    }
+    for(let i = 0; i < 18; i++){
+      const horiz = rnd() > 0.45, r = rnd();
+      const hl = r < 0.25 ? 0.30 + 0.25 * rnd() : (r < 0.65 ? 0.10 + 0.14 * rnd() : 0.02 + 0.05 * rnd());
+      const thick = rnd() > 0.88 ? 0.008 + 0.010 * rnd() : 0.0008 + 0.0022 * Math.pow(rnd(), 3);
+      put(horiz ? 0 : 1, (rnd() - 0.5) * 0.96, (rnd() - 0.5) * 0.96, (0.10 + 0.88 * rnd()) * dense,
+          hl, thick, (i % 3 === 2) ? 2 + Math.floor(rnd() * 5) : 0, 0.006 + 0.012 * rnd());
+    }
+    for(let i = 0; i < 6; i++)
+      put(2, (rnd() - 0.5) * 0.84, (rnd() - 0.5) * 0.80, (i === 0 ? 0.08 : 0.15 + 0.80 * rnd()) * dense,
+          0.04 + 0.20 * rnd(), 0.04 + 0.20 * rnd(), 0.30 + 0.40 * rnd(), 0.30 + 0.40 * rnd());
+    for(let i = 0; i < 3; i++)
+      put(3, (rnd() - 0.5) * 0.80, (rnd() - 0.5) * 0.80, (0.25 + 0.70 * rnd()) * dense,
+          0.08 + 0.26 * rnd(), 0.02 + 0.12 * rnd(), 70 + 90 * rnd(), rnd() > 0.5 ? 1 : -1);
+    for(let i = 0; i < 5; i++)
+      put(4, 0, 0, (0.12 + 0.85 * rnd()) * dense, 0.7 + 2.2 * rnd(), rnd() * TAU, (rnd() - 0.5) * 0.7, 0.20 + 0.45 * rnd());
+    for(let i = 0; i < 2; i++)
+      put(5, (rnd() - 0.5) * 0.85, (rnd() - 0.5) * 0.80, 0.35 + 0.60 * rnd(), 0.6 + 1.0 * rnd(), rnd() > 0.5 ? 1 : 0, 0, 0);
+  };
+  if(fam === 0){ grid(1); }
+  else if(fam === 1){                       // rays bursting out from behind the disc
+    for(let i = 0; i < 28; i++){
+      const long = rnd() > 0.6;
+      put(6, 0, 0, 0.05 + 0.85 * rnd(), rnd() * TAU, 0.90 + 0.25 * rnd(), long ? 0.35 + 0.55 * rnd() : 0.06 + 0.22 * rnd(),
+          rnd() > 0.85 ? 0.005 + 0.006 * rnd() : 0.0014 + 0.0020 * rnd());
+    }
+    for(let i = 0; i < 4; i++) put(7, 0, 0, 0.10 + 0.70 * rnd(), 1.04 + 0.55 * rnd(), 0.0012 + 0.0015 * rnd(), 0.02 + 0.07 * rnd(), rnd() > 0.5 ? 0 : 30 + Math.floor(rnd() * 50));
+    for(let i = 0; i < 4; i++){ const q = pol(rs * (1.15 + 0.55 * rnd()), rnd() * TAU); put(5, q[0], q[1], 0.20 + 0.70 * rnd(), 0.6 + 1.0 * rnd(), rnd() > 0.5 ? 1 : 0, 0, 0); }
+    lay[1] = (rnd() - 0.5) * 0.30;          // the whole fan turns a little as it opens
+  }
+  else if(fam === 2){                       // shockwave rings leaving the disc
+    for(let i = 0; i < 8; i++)
+      put(7, 0, 0, 0.04 + 0.80 * rnd(), 1.02 + 0.10 * i + 0.08 * rnd(), i % 3 === 0 ? 0.004 + 0.004 * rnd() : 0.0010 + 0.0016 * rnd(),
+          0.04 + 0.22 * rnd(), i % 2 === 0 ? 0 : 24 + Math.floor(rnd() * 70));
+    for(let i = 0; i < 16; i++) put(6, 0, 0, 0.10 + 0.85 * rnd(), rnd() * TAU, 1.03 + 0.35 * rnd(), 0.02 + 0.06 * rnd(), 0.0010 + 0.0014 * rnd());
+    for(let i = 0; i < 3; i++) put(4, 0, 0, 0.20 + 0.70 * rnd(), 0.7 + 2.2 * rnd(), rnd() * TAU, (rnd() - 0.5) * 0.7, 0.20 + 0.45 * rnd());
+    for(let i = 0; i < 3; i++){ const q = pol(rs * (1.10 + 0.60 * rnd()), rnd() * TAU); put(5, q[0], q[1], 0.15 + 0.70 * rnd(), 0.6 + 1.0 * rnd(), 1, 0, 0); }
+  }
+  else if(fam === 3){                       // heavy bars and scan fields sliding sideways
+    for(let i = 0; i < 10; i++)
+      put(0, (rnd() - 0.5) * 0.6, (rnd() - 0.5) * 0.96, 0.05 + 0.85 * rnd(), 0.25 + 0.40 * rnd(),
+          i % 3 === 0 ? 0.012 + 0.022 * rnd() : 0.0015 + 0.004 * rnd(), i % 4 === 3 ? 3 + Math.floor(rnd() * 4) : 0, 0.008 + 0.012 * rnd());
+    for(let i = 0; i < 4; i++)
+      put(3, (rnd() - 0.5) * 0.70, (rnd() - 0.5) * 0.90, 0.10 + 0.75 * rnd(), 0.18 + 0.30 * rnd(), 0.03 + 0.10 * rnd(), 60 + 110 * rnd(), rnd() > 0.5 ? 1 : -1);
+    for(let i = 0; i < 5; i++)
+      put(2, (rnd() - 0.5) * 0.80, (rnd() - 0.5) * 0.90, 0.10 + 0.80 * rnd(), 0.14 + 0.20 * rnd(), 0.025 + 0.06 * rnd(), 0.30 + 0.40 * rnd(), 0.30 + 0.40 * rnd());
+    for(let i = 0; i < 5; i++) put(1, (rnd() - 0.5) * 0.96, (rnd() - 0.5) * 0.4, 0.30 + 0.65 * rnd(), 0.15 + 0.35 * rnd(), 0.0009 + 0.0012 * rnd(), 0, 0);
+    lay[2] = (rnd() > 0.5 ? 1 : -1) * (0.03 + 0.05 * rnd());
+  }
+  else if(fam === 4){                       // everything tilted: long diagonals and combs
+    lay[0] = (rnd() > 0.5 ? 1 : -1) * (0.35 + 0.45 * rnd());
+    for(let i = 0; i < 16; i++)
+      put(i % 4 === 3 ? 1 : 0, (rnd() - 0.5) * 0.9, (rnd() - 0.5) * 1.3, 0.05 + 0.88 * rnd(), 0.35 + 0.60 * rnd(),
+          rnd() > 0.85 ? 0.006 + 0.010 * rnd() : 0.0009 + 0.0020 * rnd(), i % 3 === 1 ? 2 + Math.floor(rnd() * 6) : 0, 0.006 + 0.014 * rnd());
+    for(let i = 0; i < 5; i++)
+      put(2, (rnd() - 0.5) * 0.90, (rnd() - 0.5) * 0.90, 0.12 + 0.80 * rnd(), 0.05 + 0.16 * rnd(), 0.04 + 0.12 * rnd(), 0.30 + 0.40 * rnd(), 0.30 + 0.40 * rnd());
+    for(let i = 0; i < 3; i++)
+      put(3, (rnd() - 0.5) * 0.80, (rnd() - 0.5) * 0.80, 0.25 + 0.70 * rnd(), 0.10 + 0.24 * rnd(), 0.02 + 0.08 * rnd(), 70 + 90 * rnd(), rnd() > 0.5 ? 1 : -1);
+    for(let i = 0; i < 3; i++) put(5, (rnd() - 0.5) * 0.9, (rnd() - 0.5) * 0.9, 0.25 + 0.65 * rnd(), 0.7 + 1.0 * rnd(), 1, 0, 0);
+    lay[2] = (rnd() - 0.5) * 0.08; lay[3] = (rnd() - 0.5) * 0.04;
+  }
+  else if(fam === 5){ grid(0.55); }         // dense layout, shown as the light inverted frame
+  else {                                    // mosaic: windows onto the artwork set around the disc
+    const cnt = 9, off = rnd() * TAU;
+    for(let i = 0; i < cnt; i++){
+      const ang = off + i * TAU / cnt + (rnd() - 0.5) * 0.25, rr = rs * (1.22 + 0.30 * rnd()), q = pol(rr, ang);
+      put(2, q[0], q[1], 0.04 + 0.70 * rnd(), 0.045 + 0.07 * rnd(), 0.045 + 0.07 * rnd(), 0.25 + 0.50 * rnd(), 0.25 + 0.50 * rnd());
+      put(6, 0, 0, 0.10 + 0.70 * rnd(), ang, 1.01, rr - rs, 0.0010 + 0.0010 * rnd());
+    }
+    for(let i = 0; i < 8; i++){            // corner brackets
+      const sx = i & 1 ? 1 : -1, sy = i & 2 ? 1 : -1, hz = i < 4;
+      put(hz ? 0 : 1, sx * (hz ? 0.42 : 0.46), sy * (hz ? 0.45 : 0.41), 0.10 + 0.50 * rnd(), 0.04, 0.0022, 0, 0);
+    }
+    for(let i = 0; i < 3; i++) put(7, 0, 0, 0.20 + 0.60 * rnd(), 1.05 + 0.50 * rnd(), 0.0010 + 0.0012 * rnd(), 0.02 + 0.05 * rnd(), 40 + Math.floor(rnd() * 60));
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * (0.10 + 0.18 * rnd());
+  }
+  return { el, lay, fam };
+}
+// ── Burst: hit map of the whole track, computed once when the audio loads ──
+// No live detection: the complete file is analysed up front (spectral flux,
+// bass-weighted), so every hit is known in advance and preview and export
+// read the same map at the exact audio time. Strengths are RELATIVE to the
+// track itself (half global, half local), so quiet and loud material both
+// produce a usable 0..1 scale without any per-song tuning.
+function fxAnalyzeHits(mono, sr){
+  const dec = Math.max(1, Math.round(sr / 11025));
+  const n = Math.floor(mono.length / dec);
+  const fs = sr / dec;
+  const N = 512, HOP = 128, bins = N >> 1;
+  const frames = n >= N ? Math.floor((n - N) / HOP) + 1 : 0;
+  const rate = fs / HOP;
+  const out = { t: new Float32Array(0), s: new Float32Array(0), env: new Float32Array(0),
+                lo: new Float32Array(0), hi: new Float32Array(0), envRate: rate, dur: n / fs, perMin: 0 };
+  if(frames < 8) return out;
+  const x = new Float32Array(n);
+  for(let i = 0; i < n; i++){
+    let a = 0; const o = i * dec;
+    for(let j = 0; j < dec; j++) a += mono[o + j];
+    x[i] = a / dec;
+  }
+  const win = new Float32Array(N), cosT = new Float32Array(N >> 1), sinT = new Float32Array(N >> 1);
+  for(let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+  for(let i = 0; i < (N >> 1); i++){ cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = -Math.sin(2 * Math.PI * i / N); }
+  const rev = new Uint16Array(N);
+  for(let i = 0, b = Math.log2(N); i < N; i++){ let r = 0; for(let k = 0; k < b; k++) r |= ((i >> k) & 1) << (b - 1 - k); rev[i] = r; }
+  const wgt = new Float32Array(bins);
+  for(let k = 0; k < bins; k++){ const f = k * fs / N; wgt[k] = f < 200 ? 2.0 : (f < 2000 ? 1.0 : 0.6); }
+  const re = new Float32Array(N), im = new Float32Array(N), prev = new Float32Array(bins);
+  const flux = new Float32Array(frames), rms = new Float32Array(frames), mag = new Float32Array(frames);
+  for(let fr = 0; fr < frames; fr++){
+    const o = fr * HOP; let e = 0;
+    for(let i = 0; i < N; i++){ const v = x[o + i]; e += v * v; re[rev[i]] = v * win[i]; im[rev[i]] = 0; }
+    rms[fr] = Math.sqrt(e / N);
+    for(let size = 2; size <= N; size <<= 1){
+      const half = size >> 1, step = N / size;
+      for(let s0 = 0; s0 < N; s0 += size){
+        for(let k = 0, ti = 0; k < half; k++, ti += step){
+          const a = s0 + k, b = a + half;
+          const tr = re[b] * cosT[ti] - im[b] * sinT[ti], tim = re[b] * sinT[ti] + im[b] * cosT[ti];
+          re[b] = re[a] - tr; im[b] = im[a] - tim; re[a] += tr; im[a] += tim;
+        }
+      }
+    }
+    let fl = 0, ms = 0;
+    for(let k = 1; k < bins; k++){
+      const L = Math.sqrt(re[k] * re[k] + im[k] * im[k]);   // linear magnitude: a hit counts by how much energy it adds
+      const d = L - prev[k]; if(d > 0) fl += d * wgt[k];
+      ms += L * wgt[k];
+      prev[k] = L;
+    }
+    flux[fr] = fr === 0 ? 0 : fl;
+    mag[fr] = ms;
+  }
+  // local mean of the flux over +-0.5 s (prefix sums) = adaptive threshold
+  const pre = new Float64Array(frames + 1), prm = new Float64Array(frames + 1);
+  for(let i = 0; i < frames; i++){ pre[i + 1] = pre[i] + flux[i]; prm[i + 1] = prm[i] + mag[i]; }
+  const half = Math.max(2, Math.round(0.5 * rate)), gmean = pre[frames] / frames, gmag = prm[frames] / frames;
+  const pi = [], pv = [];
+  for(let i = 3; i < frames - 3; i++){
+    const a = Math.max(0, i - half), b = Math.min(frames, i + half + 1);
+    const m = (pre[b] - pre[a]) / (b - a);
+    const v = flux[i];
+    if(v <= m * 1.35 + gmean * 0.10) continue;
+    // a hit must add a real share of energy against the level of the music around it;
+    // ripples in a steady pad or a noise wall do not qualify
+    const lmag = (prm[b] - prm[a]) / (b - a);
+    if(v - m < 0.12 * (0.5 * lmag + 0.5 * gmag)) continue;
+    let top = true;
+    for(let j = i - 3; j <= i + 3; j++) if(flux[j] > v){ top = false; break; }
+    if(top){ pi.push(i); pv.push(v - m); }
+  }
+  // loudness envelope (about 150 ms smoothing), normalised to the track's own 95th percentile
+  const env = new Float32Array(frames), k1 = 1 - Math.exp(-1 / (0.15 * rate));
+  let acc = rms[0];
+  for(let i = 0; i < frames; i++){ acc += (rms[i] - acc) * k1; env[i] = acc; }
+  const srt = Float32Array.from(env).sort(), p95 = srt[Math.min(frames - 1, Math.floor(frames * 0.95))] || 1e-6;
+  for(let i = 0; i < frames; i++) env[i] = Math.min(1, env[i] / Math.max(1e-6, p95));
+  out.env = env;
+  // for material without hits: where the loudness sits inside its own +-6 s range (4 Hz grid)
+  const q = Math.max(1, Math.round(rate / 4)), nc = Math.ceil(frames / q);
+  const lo4 = new Float32Array(nc), hi4 = new Float32Array(nc);
+  for(let j = 0; j < nc; j++){
+    let mn = 2, mx = 0;
+    for(let k = Math.max(0, j - 24); k <= Math.min(nc - 1, j + 24); k++){
+      const v = env[Math.min(frames - 1, k * q)];
+      if(v < mn) mn = v; if(v > mx) mx = v;
+    }
+    lo4[j] = mn; hi4[j] = mx;
+  }
+  out.lo = lo4; out.hi = hi4;
+  if(!pi.length) return out;
+  // strength: half against the whole track, half against the surrounding 8 s
+  const sv = pv.slice().sort((a, b) => a - b), gref = Math.max(1e-6, sv[Math.min(sv.length - 1, Math.floor(sv.length * 0.90))]);
+  const T = new Float32Array(pi.length), Sx = new Float32Array(pi.length);
+  const wloc = Math.round(4 * rate);
+  let lo = 0, hi = 0;
+  for(let p = 0; p < pi.length; p++){
+    while(pi[lo] < pi[p] - wloc) lo++;
+    while(hi < pi.length && pi[hi] <= pi[p] + wloc) hi++;
+    let lref = 1e-6; for(let q = lo; q < hi; q++) if(pv[q] > lref) lref = pv[q];
+    T[p] = (pi[p] * HOP + N * 0.5 - HOP) / fs + 0.013;   // +13 ms: measured bias of the frame centre vs the true onset
+    Sx[p] = Math.min(1, 0.5 * pv[p] / gref + 0.5 * pv[p] / lref);
+  }
+  out.t = T; out.s = Sx;
+  let strong = 0; for(let p = 0; p < Sx.length; p++) if(Sx[p] >= 0.3) strong++;
+  out.perMin = strong / Math.max(1e-3, out.dur / 60);
+  return out;
+}
+// Keep only the strongest hits, at least `gap` seconds apart (strongest first).
+function fxSelectBursts(a, gap){
+  const order = [];
+  for(let i = 0; i < a.t.length; i++) if(a.s[i] >= 0.18) order.push(i);
+  order.sort((p, q) => a.s[q] - a.s[p]);
+  const keep = [];
+  for(const i of order){
+    let ok = true;
+    for(let j = 0; j < keep.length; j++) if(Math.abs(a.t[i] - a.t[keep[j]]) < gap){ ok = false; break; }
+    if(ok) keep.push(i);
+  }
+  keep.sort((p, q) => a.t[p] - a.t[q]);
+  const t = new Float32Array(keep.length), s = new Float32Array(keep.length), inv = new Uint8Array(keep.length);
+  let lastInv = -9;
+  for(let j = 0; j < keep.length; j++){
+    t[j] = a.t[keep[j]]; s[j] = a.s[keep[j]];
+    // the light inverted frame belongs to one composition only (flash), never closer than 0.6 s apart
+    if(fxBurstFamily((j % 997) + 1) === 5 && t[j] - lastInv >= 0.6){ inv[j] = 1; lastInv = t[j]; }
+  }
+  return { t, s, inv };
+}
+// Amplitude, layout seed, age and strength of the burst at audio time `at`.
+// `sel` = hits kept for the current rate, `map` = full analysis (or null while idle).
+function fxBurstAt(at, sel, map){
+  const o = { amp: 0, seed: 1, age: 9, str: 0, env: 0 };
+  if(map && map.env.length)
+    o.env = map.env[Math.max(0, Math.min(map.env.length - 1, Math.round(at * map.envRate)))];
+  const t = sel ? sel.t : null;
+  if(t && t.length){
+    let lo = 0, hi = t.length - 1, k = -1;
+    while(lo <= hi){ const m = (lo + hi) >> 1; if(t[m] <= at){ k = m; lo = m + 1; } else hi = m - 1; }
+    if(k >= 0){
+      const age = at - t[k], s = sel.s[k];
+      o.amp = Math.pow(s, 0.6) * Math.min(1, age / 0.012) * Math.exp(-age / 0.30);
+      o.age = age; o.str = (sel.inv && sel.inv[k]) ? 1 : Math.min(s, 0.89); o.seed = (k % 997) + 1;
+      if(k > 0){
+        const a2 = Math.pow(sel.s[k - 1], 0.6) * Math.exp(-(at - t[k - 1]) / 0.30);
+        if(a2 > o.amp) o.amp = a2;
+      }
+    }
+  }
+  // material with few or no clear hits: follow the swells of the loudness instead.
+  // The swell is the loudness measured inside its own recent range, so a steady
+  // wall of sound stays calm and only real rises open the scene.
+  if(map && map.lo && map.lo.length){
+    const sw = Math.max(0, Math.min(1, (40 - map.perMin) / 40));
+    if(sw > 0){
+      const j = Math.max(0, Math.min(map.lo.length - 1, Math.round(at * 4)));
+      const range = map.hi[j] - map.lo[j];
+      const rel = range > 0.12 ? Math.max(0, Math.min(1, (o.env - map.lo[j]) / range)) : 0;
+      const v = sw * 0.85 * rel * rel;
+      if(v > o.amp){ o.amp = v; if(o.age > 2.5) o.seed = 500 + (Math.floor(at / 3.2) % 400); }
+    }
+  }
+  return o;
+}
+// Idle preview (nothing playing): a steady demo pulse so the scene can be tuned in silence.
+function fxBurstDemo(at, gap){
+  const g = Math.max(0.5, Math.min(3.2, gap)), k = Math.floor(at / g), age = at - k * g;
+  const r = Math.abs(Math.sin(k * 12.9898) * 43758.5453) % 1, s = 0.55 + 0.45 * r;
+  return { amp: Math.pow(s, 0.6) * Math.min(1, age / 0.012) * Math.exp(-age / 0.30),
+           seed: (k % 997) + 1, age, str: fxBurstFamily((k % 997) + 1) === 5 ? 1 : Math.min(s, 0.89), env: 0.5 };
+}
+// BURST-END
+let hitMap = null, hitSel = null, hitGap = -1, hitJob = 0;   // analysis of the loaded track, hits kept for the current rate
+let burstKey = "", burstExportT = null;                      // layout on the GPU, audio time forced by the exporter
+// Analyse the decoded track once, right after it loads (off the click handler so the UI stays responsive).
+function setHitMap(buf){
+  hitMap = null; hitSel = null; hitGap = -1;
+  const job = ++hitJob;
+  if(!buf) return;
+  setTimeout(() => {
+    if(job !== hitJob) return;
+    try{
+      const sr = buf.sampleRate, dec = Math.max(1, Math.round(sr / 11025));
+      const n = Math.floor(buf.length / dec), nCh = buf.numberOfChannels, x = new Float32Array(n);
+      for(let c = 0; c < nCh; c++){
+        const d = buf.getChannelData(c);
+        for(let i = 0; i < n; i++){ let a = 0; const o = i * dec; for(let j = 0; j < dec; j++) a += d[o + j]; x[i] += a / (dec * nCh); }
+      }
+      const m = fxAnalyzeHits(x, sr / dec);
+      if(job !== hitJob) return;
+      hitMap = m;
+      console.log("[vinylaudio burst] hit map: " + m.t.length + " hits, " + Math.round(m.perMin) + " strong per minute, " + m.dur.toFixed(1) + " s");
+    } catch(e){ console.warn("Burst analysis failed:", e); }
+  }, 30);
+}
+// Speed slider = how often it may hit: 3.2 s between bursts at 0, 0.25 s at 3
+function burstGap(){ return 3.2 * Math.pow(0.25 / 3.2, Math.min(1, st.speed / 3)); }
+// Audio clock: the exporter's exact frame time, else the live playback position, else a silent demo pulse.
+function burstNow(tRender){
+  const gap = burstGap();
+  let at = null;
+  if(burstExportT !== null) at = burstExportT;
+  else if(S.audioLoaded && !audioEl.paused){
+    // what you hear is behind the media clock by the output latency of the audio device
+    const lat = (fxA.ctx && typeof fxA.ctx.outputLatency === "number") ? Math.min(0.25, Math.max(0, fxA.ctx.outputLatency)) : 0;
+    at = Math.max(0, audioEl.currentTime - lat);
+  }
+  if(at === null || !hitMap) return fxBurstDemo(tRender, gap);
+  if(!hitSel || hitGap !== gap){ hitSel = fxSelectBursts(hitMap, gap); hitGap = gap; }
+  return fxBurstAt(at, hitSel, hitMap);
+}
+
 let offlineFreq = null, offlineSR = 48000; // set per-frame during the offline export
 function updateBeat(tSec){
   const playing = (offlineFreq !== null) || (fxA.analyser && !audioEl.paused);
@@ -2976,13 +3489,27 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1f(U.uDir, st.dir);
   gl.uniform1f(U.uTrail, st.trail);
   gl.uniform3f(U.uBgCol, bg[0], bg[1], bg[2]);
-  gl.uniform1i(U.uArt, st.art === "disc" ? 1 : (st.art === "card" ? 2 : 0));
+  gl.uniform1i(U.uArt, st.art === "disc" ? 1 : (st.art === "card" ? 2 : (st.art === "vinyl" ? (st.sleeve ? 4 : 3) : 0)));
   gl.uniform1f(U.uDiscR, S.vinylPct * 0.5);
   gl.uniform1f(U.uAngle, angleDeg * Math.PI/180);
   gl.uniform1i(U.uDiscFx, 0);
   gl.uniform1f(U.uBeat, beatDisc);
   gl.uniform1f(U.uBeatBg, beatBg);
   gl.uniform1fv(U.uSpec, spec);
+  gl.uniform1f(U.uRev, 60/Math.max(S.rpm, 1));     // seconds per disc revolution (Eclipse ties its orbits to it)
+  if(st.mode === 28){
+    const hb = burstNow(t);
+    const bAsp = W/H, bRs = (S.vinylPct * 0.5)*Math.min(bAsp, 1), bKey = hb.seed + "|" + W + "x" + H + "|" + bRs.toFixed(4);
+    if(bKey !== burstKey){                           // a new burst, or the frame or disc size changed: build its layout
+      const L = fxBurstLayout(hb.seed, bAsp, bRs);
+      gl.uniform4fv(U.uEl, L.el);
+      gl.uniform4f(U.uLay, L.lay[0], L.lay[1], L.lay[2], L.lay[3]);
+      burstKey = bKey;
+    }
+    gl.uniform4f(U.uHit, hb.amp, hb.seed, hb.age, hb.str);
+    gl.uniform1f(U.uHitEnv, hb.env);
+    gl.uniform2f(U.uArtRange, artLo, artHi);
+  }
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -3113,7 +3640,7 @@ async function liveExport(){
 
   const XFADE   = 1.0;
   const SIM_FPS = 60;
-  const fastLoopPossible = st.renderMode !== "full";
+  const fastLoopPossible = st.renderMode !== "full" && st.mode !== 28;   // Burst follows the song: never looped
   const OUT_FPS = 60;                 // GPU encoder: 60 fps everywhere = preview-smooth motion
   const STEP    = SIM_FPS / OUT_FPS;
 
@@ -3230,9 +3757,11 @@ async function liveExport(){
         const simIdx = f * STEP + s;
         const t = simIdx / SIM_FPS;
         offlineFreq = freqFrames ? freqFrames[Math.min(simIdx, freqFrames.length - 1)] : null;
-        render(W, H, t * effRpm * 6, t);
+        burstExportT = audioStart + t;             // Burst reads the hit map at this frame's exact audio time
+        render(W, H, S.rotDir * t * effRpm * 6, t);
       }
       offlineFreq = null;
+      burstExportT = null;
 
       if (fastLoop && f < xfadeFrames) headBmps[f] = await createImageBitmap(glc);
       if (!fastLoop || f >= xfadeFrames) {
@@ -3359,7 +3888,7 @@ async function liveExportRealtime(){
   const XFADE  = 1.0;
   const revSec = 60 / Math.max(S.rpm, 1);
   const segLen = revSec * Math.max(1, Math.ceil(12 / revSec));   // whole revolutions, ≥12 s
-  const fastLoop = st.renderMode !== "full" && (duration > segLen + XFADE + 2);
+  const fastLoop = st.renderMode !== "full" && st.mode !== 28 && (duration > segLen + XFADE + 2);
   const captureSeconds = fastLoop ? (segLen + XFADE) : duration;
 
   // compositor: GL scene + optional foreground image, this is what gets recorded
@@ -3429,7 +3958,7 @@ async function liveExportRealtime(){
   function loop(){
     if(stopped) return;
     const el = (performance.now() - tStart)/1000;
-    const angleDeg = el * S.rpm * 6;                 // rpm * 360 / 60
+    const angleDeg = S.rotDir * el * S.rpm * 6;      // rpm * 360 / 60, signed by the spin direction
     render(W, H, angleDeg);
     cc.drawImage(glc, 0, 0);
     if(S.fgImage){
@@ -3554,7 +4083,7 @@ async function liveExportRealtime(){
   }
 }
 
-return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport };
+return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHitMap };
 })();
 
 // ── Top bar: general hints rotate; notable picks show what they pair with ──
@@ -3573,33 +4102,27 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport };
   const PAIR = {
     "-1":"Off \u2192 clean solid stage for the disc or card.",
     "0":"Melt pairs with Card at low Speed for moody covers \u2192 add a touch of Aberration.",
-    "1":"Palette flow pairs with edited swatches \u2192 repaint it to match the release colors.",
     "2":"Vortex pairs with Trails 0.3. Full song \u2192 Full render, so the spin completes.",
     "3":"Ripple pairs with Card. Full song \u2192 Full render, the slow rotation needs the whole track.",
     "4":"Bloom pairs with Card for atmospheric promos \u2192 raise Swirl so the inks fuse.",
-    "5":"Nebula pairs behind Card or Disc \u2192 add a touch of Glow for a dreamy backdrop.",
     "6":"Tunnel pairs with Aberration. Swirl above 0 rotates \u2192 on full songs use Full render.",
     "7":"Kaleido pairs with Trails 0.2. Full song \u2192 Full render for uninterrupted rotation.",
     "8":"Glitch pairs with a touch of Aberration \u2192 crank Speed for chaos.",
     "9":"Spectrum pairs with Artwork off + high Trails \u2192 needs the song playing.",
     "10":"Droste pairs with high Trails \u2192 hypnotic infinite fall into the artwork.",
-    "11":"Warp pairs with high Streak + Trails \u2192 Reverse pulls the stars inward.",
+    "11":"Warp pairs with Disc or Artwork off \u2192 Warp = how much of the artwork glows in the tunnel, Streak = tail length, Swirl = core and lens flare. Reverse pulls the stars inward.",
     "12":"Liquid pairs with high Warp \u2192 molten backdrop behind a Card.",
-    "13":"Reactor pairs with Trails + Reverse \u2192 the vortex turns into an intake.",
-    "14":"Echo pairs best behind Card \u2192 darken it with Streak so the card pops.",
-    "15":"Datamosh pairs with Aberration for extra corruption. Long songs \u2192 Full render.",
+    "13":"Reactor pairs with Disc \u2192 the record sits in the eye of the whirlpool. Swirl = twist, Warp = wobble, Streak = node density.",
     "16":"Feedback pairs with Trails \u2192 try Reverse for an outward blast. Long songs \u2192 Full render.",
     "17":"VHS pairs great with Aberration around 0.2\u20130.3 \u2192 the full tape look.",
     "18":"Burn pairs with warm artworks \u2192 stack slight Aberration for retro film.",
     "19":"Halftone pairs with Card \u2192 editorial print promo at low Speed.",
     "20":"Slices pairs with a touch of Glow \u2192 Scale sets the bar count.",
-    "21":"Dither pairs with low Speed \u2192 Swirl tints the ink from your palette.",
-    "22":"ASCII pairs with Swirl up \u2192 moves from terminal green to palette ink.",
     "23":"Twinspin pairs with Reverse + high Swirl \u2192 double-spin moire. Long songs \u2192 Full render.",
     "24":"Depth 3D pairs with Artwork off \u2192 Warp = depth, Swirl = orbit, Streak = focus blur. Long songs \u2192 Full render.",
     "25":"Cymatics pairs with the music itself (the plate vibrates on the song) \u2192 Streak = line width, Scale = pattern complexity.",
-    "26":"Topographic pairs with Card floating on the map \u2192 lines flow forever: Scale = density, Swirl = ink vs artwork colors.",
-    "27":"CRT pairs with Artwork off (the full retro monitor) \u2192 Warp = curvature, Streak = scanlines + rolling bar, Swirl = misconvergence."
+    "28":"Burst pairs with Disc or Artwork off \u2192 press Preview to hear it land. Seven compositions take turns, no two bursts in a row alike. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors of the artwork.",
+    "29":"Eclipse pairs with Disc \u2192 the light wraps the record and loops exactly with its rotation. Speed = how fast it orbits, Streak = thickness, Warp = restlessness, Swirl = colors of the artwork.",
   };
 
   let gi = 0, hold = null, rot = null;
@@ -3628,7 +4151,8 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport };
   });
   document.getElementById("fxArt").addEventListener("click", e=>{
     const b = e.target.closest("button"); if(!b) return;
-    if(b.dataset.a === "card") tip("Card pairs best with Echo behind it \u2192 or Nebula/Bloom for atmosphere.");
+    if(b.dataset.a === "vinyl") tip("Vinyl \u2192 your artwork is the centre label of a spinning record. Pick Sleeve to show it as the cover with the record pulled out. Photo Size sets the size.");
+    if(b.dataset.a === "card") tip("Card pairs best with Bloom or Eclipse behind it \u2192 or Burst when it should land on the music.");
   });
   document.getElementById("fxRender").addEventListener("click", e=>{
     const b = e.target.closest("button"); if(!b) return;
