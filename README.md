@@ -1,6 +1,6 @@
 # Storytellers Motion
 
-### Live app: **https://andreilucca.github.io/storytellersmotion/**
+### Live app: **https://andreilucca.github.io/storytellersmotion**
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
@@ -10,10 +10,6 @@ Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
 effects engine. Everything renders 100% in your browser: no server, no upload,
 no watermark, no account. Your files never leave your device.
-
-> Renamed from `vinylaudio`. The old repository address redirects here, but the
-> old live app address (`andreilucca.github.io/vinylaudio`) does not: GitHub
-> does not redirect project site URLs after a rename. Use the link above.
 
 ## Features
 
