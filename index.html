@@ -409,6 +409,34 @@
   }
 </style>
 <style id="premiumPass">
+  /* ── Layout switch and the New layout (tabs, effect thumbnails, Record always in view) ── */
+  .logo-wrap { display: flex; align-items: center; gap: 22px; min-width: 0; }
+  .lay-switch { display: inline-flex; flex-shrink: 0; border: 1px solid #2c2c2c; border-radius: 7px; overflow: hidden; background: #161616; }
+  .lay-switch button { all: unset; cursor: pointer; padding: 5px 12px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7c7c7c; transition: color .15s, background .15s; }
+  .lay-switch button:hover { color: #b8b8b8; }
+  .lay-switch button.on { color: #cfcfcf; background: #242424; }
+  .lay-tabs { display: none; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 6; background: var(--surface); flex-shrink: 0; }
+  .lay-tabs button { all: unset; cursor: pointer; text-align: center; padding: 13px 0 11px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #777; border-bottom: 2px solid transparent; transition: color .15s; }
+  .lay-tabs button:hover { color: #b8b8b8; }
+  .lay-tabs button.on { color: #cfcfcf; border-bottom-color: var(--accent); }
+  #fxModes img.fx-thumb { display: none; }
+  body.lay-new .lay-tabs { display: grid; }
+  body.lay-new .panel-left .section > .section-label { display: none; }
+  body.lay-new[data-tab="media"] .panel-left [data-tab]:not([data-tab="media"]),
+  body.lay-new[data-tab="setup"] .panel-left [data-tab]:not([data-tab="setup"]),
+  body.lay-new[data-tab="artwork"] .panel-left [data-tab]:not([data-tab="artwork"]),
+  body.lay-new[data-tab="effects"] .panel-left [data-tab]:not([data-tab="effects"]) { display: none !important; }
+  body.lay-new[data-tab="media"] .panel-left .section:not([data-tab]),
+  body.lay-new[data-tab="setup"] .panel-left .section:not([data-tab]) { display: none; }
+  body.lay-new .panel-left .fx-lbl[data-tab]:first-of-type { margin-top: 0; }
+  body.lay-new #fxModes { grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  body.lay-new #fxModes .fx-btn { display: flex; flex-direction: column; align-items: stretch; gap: 5px; padding: 5px 5px 6px; min-height: 0; font-size: 0.56rem; letter-spacing: 0.06em; position: relative; }
+  body.lay-new #fxModes img.fx-thumb { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 5px; background: #0c0c0c; }
+  body.lay-new #fxModes .fx-btn[data-m="-1"] { grid-column: 1 / -1; flex-direction: row; justify-content: center; padding: 7px; }
+  body.lay-new #fxModes .fx-btn .fx-badge { position: absolute; top: 8px; right: 8px; background: rgba(10,10,10,0.72); font-size: 0.46rem; padding: 1px 4px; }
+  body.lay-new #fxModes .fx-btn.on { box-shadow: 0 0 0 1px var(--accent) inset; }
+  body.lay-new .record-section { position: sticky; bottom: 0; z-index: 5; background: linear-gradient(rgba(17,17,17,0), var(--surface) 26%); padding-top: 22px; margin-top: 0; border-top: none; }
+  @media (max-width: 760px) { .lay-switch button { padding: 4px 8px; } .logo-wrap { gap: 10px; } }
   .preset-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; margin: 2px 0 16px; }
   .preset-row select { min-width: 0; padding: 0 0.55rem; height: 32px; background: #181818; border: 1px solid #2c2c2c; border-radius: 7px;
                        color: var(--text); font-size: 0.72rem; font-family: inherit; outline: none; cursor: pointer; }
@@ -522,13 +550,17 @@
 </script>
 
 <header>
-  <div class="logo">storytellers motion</div>
+  <div class="logo-wrap">
+    <div class="logo">storytellers motion</div>
+    <div class="lay-switch" id="laySwitch" title="Panel layout"><button data-lay="classic">Classic</button><button data-lay="new">New</button></div>
+  </div>
   <div class="tagline" id="fxHints"></div>
 </header>
 
 <main>
   <!-- ── LEFT PANEL ── -->
   <aside class="panel-left">
+    <div class="lay-tabs" id="layTabs"><button data-t="media">Media</button><button data-t="setup">Setup</button><button data-t="artwork">Artwork</button><button data-t="effects">Effects</button></div>
 
     <!-- Image Upload -->
     <div class="section">
@@ -864,7 +896,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b31 · 2026-11-14 · test build: presets saved in the browser · Random</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b32 · 2026-11-14 · test build: New layout with tabs and effect thumbnails, Classic kept, switch next to the logo</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -4612,6 +4644,47 @@ async function liveExportRealtime(){
 }
 
 
+// ── Thumbnails for the New layout: every effect drawn small, with its own look, from the loaded artwork ──
+// The whole batch runs at one size and in one go, so the engine changes its buffers only twice.
+let thumbsDirty = true, thumbsTimer = 0;
+const thumbCv = document.createElement("canvas"); thumbCv.width = thumbCv.height = 96;
+const thumbCx = thumbCv.getContext("2d", { willReadFrequently: true });
+function makeThumbs(){
+  if(!S.imageLoaded || !document.body.classList.contains("lay-new")) return;
+  const keys = ["mode","art","dir"].concat(Object.keys(SLIDERS)), keep = {};
+  keys.forEach(k => keep[k] = st[k]);
+  const lum = () => { const d = thumbCx.getImageData(0, 0, 96, 96).data; let sum = 0; for(let i = 0; i < d.length; i += 16) sum += d[i] + d[i+1] + d[i+2]; return sum; };
+  try {
+    document.querySelectorAll("#fxModes .fx-btn").forEach(b => {
+      const m = parseInt(b.dataset.m, 10);
+      if(!(m >= 0)) return;
+      const d = MODE_DEFAULTS[String(m)] || {};
+      st.mode = m; st.art = "off"; st.dir = 1;
+      for(const k in SLIDERS) st[k] = d[k] === undefined ? 0 : d[k];
+      let best = -1, url = "";
+      for(const t of (m === 28 ? [0.15, 0.6, 1.3, 2.1, 2.9] : [3.0])){      // Burst: keep the moment with the most light
+        render(96, 96, 20, t);
+        thumbCx.drawImage(glc, 0, 0, 96, 96);
+        const l = m === 28 ? lum() : 1;
+        if(l > best){ best = l; url = thumbCv.toDataURL("image/jpeg", 0.85); }
+      }
+      let im = b.querySelector("img.fx-thumb");
+      if(!im){ im = document.createElement("img"); im.className = "fx-thumb"; im.alt = ""; b.insertBefore(im, b.firstChild); }
+      im.src = url;
+    });
+    thumbsDirty = false;
+  } catch(e){
+    console.warn("[storytellersmotion thumbs]", e);
+  } finally {
+    keys.forEach(k => st[k] = keep[k]);
+    if(!animId) draw();
+  }
+}
+function scheduleThumbs(){
+  clearTimeout(thumbsTimer);
+  thumbsTimer = setTimeout(() => { if(thumbsDirty) makeThumbs(); }, 450);
+}
+
 // ── Presets and Random ──
 // A preset is the whole look: artwork mode, effect, direction and its ten dials, plus disc speed,
 // rotation, photo size, background color and the text style. Presets are kept in this browser.
@@ -4698,7 +4771,9 @@ function exportTag(){
   const fx = c.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
   return fx ? art + "-" + fx : art;
 }
-return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHitMap, exportTag, setLabel, mode: () => st.mode, art: () => st.art,
+return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
+         setArtwork: function(){ const r = setArtwork.apply(null, arguments); thumbsDirty = true; scheduleThumbs(); return r; },
+         thumbs: () => scheduleThumbs(), exportTag, setLabel, mode: () => st.mode, art: () => st.art,
          accent: () => {                                  // the most vivid tone of the artwork palette, as a CSS color
            let best = null, score = -1;
            for (const c of (currentPal || [])) {
@@ -4844,6 +4919,50 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHi
     FX.setLabel(null); inp.value = ""; lab.textContent = "Upload"; clr.style.display = "none";
     if (!animId) draw();
   });
+})();
+
+// ── Layout: Classic, or New with tabs and effect thumbnails. The choice is kept in this browser. ──
+(function(){
+  const KEY = "stm.layout", aside = document.querySelector(".panel-left"), sw = document.getElementById("laySwitch"), tabs = document.getElementById("layTabs");
+  // every block of the panel is tagged with the tab it belongs to
+  const secs = Array.from(aside.querySelectorAll(".section"));
+  const nameOf = sec => ((sec.querySelector(".section-label") || {}).textContent || "").trim();
+  secs.forEach(sec => {
+    const nm = nameOf(sec);
+    if (/^(Photo|Audio)/i.test(nm)) sec.dataset.tab = "media";
+    else if (/^(Format|Appearance)/i.test(nm)) sec.dataset.tab = "setup";
+  });
+  const fx = secs.find(sec => /^Effects/i.test(nameOf(sec)));
+  if (fx) {
+    let group = "effects";
+    Array.from(fx.children).forEach(el => {
+      if (el.classList.contains("section-label")) return;
+      const t = el.textContent.trim();
+      if (el.classList.contains("fx-lbl") && /^Artwork/.test(t)) group = "artwork";
+      if (el.classList.contains("fx-lbl") && /^Export render/.test(t)) group = "effects";
+      el.dataset.tab = el.classList.contains("preset-row") ? "effects" : group;
+    });
+  }
+  const setTab = t => {
+    document.body.dataset.tab = t;
+    tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+    aside.scrollTop = 0;
+  };
+  const setLayout = (v, save) => {
+    const isNew = v === "new";
+    document.body.classList.toggle("lay-new", isNew);
+    sw.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.lay === v));
+    if (isNew) {
+      if (!document.body.dataset.tab) setTab(S.imageLoaded ? "effects" : "media");
+      if (window.FX && FX.thumbs) FX.thumbs();
+    }
+    if (save) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  };
+  tabs.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setTab(b.dataset.t); });
+  sw.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setLayout(b.dataset.lay, true); });
+  let v = "new";
+  try { const saved = localStorage.getItem(KEY); if (saved === "classic" || saved === "new") v = saved; } catch (e) {}
+  setLayout(v, false);
 })();
 </script>
 </body>
