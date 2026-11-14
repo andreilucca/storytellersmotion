@@ -409,6 +409,13 @@
   }
 </style>
 <style id="premiumPass">
+  /* Clip length: chosen right where the song is loaded */
+  .clip-length { margin-top: 16px; }
+  .clip-length-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8a8a; margin-bottom: 8px; }
+  #durationControl { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  #durationControl button { padding: 0.55rem 0; text-align: center; }
+  #durationControl button:disabled { opacity: 0.38; cursor: not-allowed; }
+  .clip-length-note { margin-top: 8px; font-size: 0.68rem; color: #7c7c7c; line-height: 1.4; }
   /* The hint at the top right always stays on one line: it takes the room next to the logo,
      its type shrinks a little when the sentence is long, and only then is it cut with an ellipsis. */
   header { gap: 28px; }
@@ -610,6 +617,15 @@
           <span class="trim-duration" id="trimDuration"></span>
         </div>
       </div>
+      <div class="clip-length" id="durationRow">
+        <div class="clip-length-title">Clip length</div>
+        <div class="seg-control" id="durationControl">
+          <button data-sec="0" title="The whole song, from start to end">Full song</button>
+          <button data-sec="30" class="active" title="A 30 second part of the song, or a 30 second silent video">30 sec</button>
+          <button data-sec="60" title="A 1 minute part of the song, or a 1 minute silent video">1 min</button>
+        </div>
+        <div class="clip-length-note" id="clipNote"></div>
+      </div>
     </div>
 
     <!-- Format Presets -->
@@ -669,14 +685,6 @@
       <div class="section-label">Appearance</div>
 
       <!-- Duration (only when no audio) -->
-      <div class="setting-row duration-row" id="durationRow">
-        <span class="setting-label">Duration</span>
-        <div class="seg-control" id="durationControl">
-          <button data-sec="30" class="active">30s</button>
-          <button data-sec="60">1m</button>
-        </div>
-      </div>
-
       <div class="setting-row">
         <span class="setting-label">Background</span>
         <div class="setting-control">
@@ -894,7 +902,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b36 · 2026-11-14 · test build: the hint line stays on one row</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b38 · 2026-11-14 · test build: Clip length (Full song, 30 sec, 1 min) sits in Media, under the song</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -1621,11 +1629,18 @@ function syncDuration() {
 }
 
 function updateDurationButtons() {
+  const manual = S.audioLoaded ? S.manualDuration : true;
   durationCtrl.querySelectorAll("button").forEach(b => {
-    const sec    = parseInt(b.dataset.sec, 10);
-    const manual = S.audioLoaded ? S.manualDuration : true;
-    b.classList.toggle("active", manual && sec === S.silentDuration);
+    const sec = parseInt(b.dataset.sec, 10);
+    b.classList.toggle("active", sec === 0 ? !manual : (manual && sec === S.silentDuration));
+    if (sec === 0) b.disabled = !S.audioLoaded;
   });
+  const note = document.getElementById("clipNote");
+  if (note) {
+    const len = S.silentDuration === 60 ? "1 minute" : S.silentDuration + " second";
+    note.textContent = !S.audioLoaded ? "No song loaded: a silent " + len + " video. Load a song to use Full song."
+      : (manual ? "A " + len + " part of the song: drag the green window on the waveform to choose it." : "The whole song is used, from start to end.");
+  }
 }
 
 function checkReady() {
@@ -2116,8 +2131,8 @@ document.getElementById("formatGrid").querySelectorAll(".format-card").forEach(c
 durationCtrl.querySelectorAll("button").forEach(btn => {
   btn.addEventListener("click", () => {
     const sec = parseInt(btn.dataset.sec, 10);
-    if (S.audioLoaded && S.manualDuration && S.silentDuration === sec) {
-      // Click the active button again → back to full song
+    if (sec === 0) {                         // Full song: only with a song loaded
+      if (!S.audioLoaded) return;
       S.manualDuration = false;
     } else {
       S.silentDuration = sec;
@@ -2136,6 +2151,7 @@ btnPreview.addEventListener("click",  togglePreview);
 applyCanvasSize();
 setupWaveformDrag();
 checkReady();
+updateDurationButtons();
 startAnim();
 
 
@@ -4888,48 +4904,148 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
   const el = document.getElementById("fxHints");
   if(!el) return;
 
+  // ── The hint line ─────────────────────────────────────────────────────────
+  // Every hint is built from the current state (effect, artwork mode, format,
+  // photo size, song loaded or not), and every dial description below is taken
+  // from what that dial really does in that effect's shader. A dial that an
+  // effect does not read is reported as such instead of being described.
   const GENERAL = [
+    "Move any slider \u2192 this line tells you what it does in the selected effect.",
+    "Effects marked FULL rotate or evolve continuously \u2192 on a whole song set Export render to Full render.",
+    "Fast loop draws one loop and repeats it; Full render draws every frame.",
     "Recording? Keep this tab visible and focused \u2192 background throttling freezes frames.",
-    "Effects marked FULL rotate or evolve continuously \u2192 on full songs set Export render to Full render.",
-    "Fast loop exports any song length in about a minute; Full render draws every frame on the GPU.",
     "Click or drag the waveform to jump anywhere in the song.",
-    "Each effect has its own defaults \u2192 the \u21ba reset next to Effect settings brings them back."
+    "Each effect has its own look \u2192 the reset next to Effect settings brings it back.",
+    "Presets keep a whole look in this browser; Random proposes another effect."
   ];
-  // pairing tips: not what the effect does, but what it works well with
-  const PAIR = {
-    "-1":"Off \u2192 clean solid stage for the disc or card.",
-    "0":"Melt pairs with Card at low Speed for moody covers \u2192 add a touch of Aberration.",
-    "2":"Vortex pairs with Trails 0.3. Full song \u2192 Full render, so the spin completes.",
-    "3":"Ripple pairs with Card. Full song \u2192 Full render, the slow rotation needs the whole track.",
-    "4":"Bloom pairs with Card for atmospheric promos \u2192 raise Swirl so the inks fuse.",
-    "6":"Tunnel pairs with Aberration. Swirl above 0 rotates \u2192 on full songs use Full render.",
-    "7":"Kaleido pairs with Trails 0.2. Full song \u2192 Full render for uninterrupted rotation.",
-    "8":"Glitch pairs with a touch of Aberration \u2192 crank Speed for chaos.",
-    "9":"Spectrum pairs with Artwork off + high Trails \u2192 needs the song playing.",
-    "10":"Droste pairs with high Trails \u2192 hypnotic infinite fall into the artwork.",
-    "12":"Liquid pairs with high Warp \u2192 molten backdrop behind a Card.",
-    "13":"Reactor pairs with Disc \u2192 the record sits in the eye of the whirlpool. Swirl = twist, Warp = wobble, Streak = node density.",
-    "16":"Feedback pairs with Trails \u2192 try Reverse for an outward blast. Long songs \u2192 Full render.",
-    "17":"VHS pairs great with Aberration around 0.2\u20130.3 \u2192 the full tape look.",
-    "18":"Burn pairs with warm artworks \u2192 stack slight Aberration for retro film.",
-    "19":"Halftone pairs with Card \u2192 editorial print promo at low Speed.",
-    "20":"Slices pairs with a touch of Glow \u2192 Scale sets the bar count.",
-    "23":"Twinspin pairs with Disc \u2192 the record sits where the two galaxies meet. Swirl = how tightly the arms wind, Streak = arm sharpness, Warp = turbulence.",
-    "24":"Depth 3D pairs with Artwork off \u2192 Warp = depth, Swirl = orbit, Streak = focus blur. Long songs \u2192 Full render.",
-    "25":"Cymatics pairs with the music itself (the plate vibrates on the song) \u2192 Streak = line width, Scale = pattern complexity.",
-    "28":"Burst follows the hits of your song \u2192 24 compositions in a shuffled deck, none repeats. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors.",
-    "30":"Tendril pairs with Disc or Vinyl \u2192 the filaments grow out of the rim of the record. Warp = curl, Streak = how fine they are, Scale = density, Swirl = colors.",
-    "31":"Orbits pairs with Disc or Vinyl \u2192 the record sits at the centre of the system. Warp = tilt of the orbits, Streak = trail length, Scale = spacing.",
-    "29":"Eclipse pairs with Disc or Vinyl \u2192 the nebula wraps the record. Push Warp and Swirl to the top for the kaleidoscopic, iridescent version. Speed = orbit speed, Streak = filament sharpness, Scale = detail size.",
+  // g: A = built around the round record, B = the artwork itself across the whole frame,
+  //    S = grows from the centre, C = works behind anything.  d = what each dial does, most useful first.
+  const FXI = {
+    "0":  { n:"Melt",     g:"B", d:{ warp:"how much it melts", streak:"how far it sags", scale:"size of the folds" } },
+    "2":  { n:"Vortex",   g:"B", d:{ swirl:"twist of the whirlpool", warp:"wobble and relief", streak:"motion blur, from 0.3 up", scale:"size of the wobble" } },
+    "3":  { n:"Ripple",   g:"B", d:{ warp:"height of the waves", scale:"number of rings", swirl:"twist of the rings" } },
+    "4":  { n:"Bloom",    g:"C", d:{ swirl:"how much the inks fuse", scale:"smaller blobs as it rises", warp:"drift" } },
+    "6":  { n:"Tunnel",   g:"B", d:{ swirl:"rotation of the tunnel", scale:"repeats around the tunnel", warp:"wobble of the walls" } },
+    "7":  { n:"Kaleido",  g:"B", d:{ scale:"number of mirrored segments", swirl:"zoom of the pattern", warp:"organic wobble" } },
+    "8":  { n:"Glitch",   g:"B", d:{ warp:"how far the rows jump", streak:"color split", scale:"thinner rows as it rises" } },
+    "9":  { n:"Spectrum", g:"S", audio:1, d:{ swirl:"height of the bars", scale:"size of the centre ring" } },
+    "10": { n:"Droste",   g:"B", d:{ swirl:"twist of the spiral", scale:"zoom between levels", warp:"jitter" } },
+    "12": { n:"Liquid",   g:"B", d:{ warp:"how strongly it flows", scale:"size of the ripples" } },
+    "13": { n:"Reactor",  g:"A", d:{ swirl:"twist of the arms", warp:"wobble", streak:"density of the nodes", scale:"size of the pulses" } },
+    "16": { n:"Feedback", g:"B", d:{ streak:"speed of the fall", swirl:"how long the echoes last", scale:"size of the source window", warp:"wobble of the spin" } },
+    "17": { n:"VHS",      g:"B", d:{ streak:"color bleed", swirl:"amount of snow", warp:"tape wobble" } },
+    "18": { n:"Burn",     g:"B", d:{ streak:"strength of the light leaks", swirl:"size of the leaks", warp:"drift and flicker" } },
+    "19": { n:"Halftone", g:"B", d:{ scale:"finer dots as it rises", warp:"drift" } },
+    "20": { n:"Slices",   g:"B", d:{ scale:"number of bars", streak:"how far they slide" } },
+    "23": { n:"Twinspin", g:"A", loop:1, d:{ swirl:"how tightly the arms wind", streak:"sharpness of the arms", warp:"turbulence", scale:"size of the detail", speed:"speed of the turn" } },
+    "24": { n:"Depth 3D", g:"B", d:{ warp:"amount of depth", swirl:"size of the camera orbit", streak:"blur of the far planes", scale:"zoom" } },
+    "25": { n:"Cymatics", g:"C", audio:1, d:{ scale:"complexity of the pattern", streak:"width of the lines", swirl:"shape of the pattern", warp:"organic wobble" } },
+    "28": { n:"Burst",    g:"A", audio:1, d:{ speed:"how often it hits", warp:"power of each hit", swirl:"black and white to artwork colors", scale:"density", streak:"line weight and glow" } },
+    "29": { n:"Eclipse",  g:"A", loop:1, rec:1, d:{ warp:"folding of the gas, kaleidoscope at the top", swirl:"cold light, artwork colors, then iridescent", streak:"sharpness of the filaments", scale:"size of the detail", speed:"speed of the orbit" } },
+    "30": { n:"Tendril",  g:"A", loop:1, rec:1, d:{ warp:"how much they curl", streak:"how fine they are", scale:"density", swirl:"cold light, artwork colors, then iridescent", speed:"speed of the growth" } },
+    "31": { n:"Orbits",   g:"A", loop:1, rec:1, d:{ warp:"tilt of the orbits", streak:"trail length and line weight", scale:"spacing of the orbits", swirl:"white lines to artwork colors", speed:"speed of the system" } }
+  };
+  const LABEL = { speed:"Speed", warp:"Warp", streak:"Streak", swirl:"Swirl", scale:"Scale", trail:"Trails", ca:"Aberration", glow:"Glow", grain:"Grain", vig:"Vignette" };
+  const FINISH = {
+    trail: "Trails \u2192 echo of the frames before: motion leaves a smear behind it. Keep it low for a crisp picture.",
+    ca:    "Aberration \u2192 color fringes toward the edges. Keep it at 0 for the sharpest picture.",
+    glow:  "Glow \u2192 light bleeding out of the bright areas. Above 0.3 it softens detail.",
+    grain: "Grain \u2192 film texture. It costs sharpness and makes platforms compress the video harder.",
+    vig:   "Vignette \u2192 darker corners. Keep it at 0 for a flat, clean background."
+  };
+  const MAXLEN = 196;                                           // longer than this no longer fits one row on a 1400 px window
+  const artNow = () => (window.FX && FX.art) ? FX.art() : "disc";
+  const modeNow = () => String((window.FX && FX.mode) ? FX.mode() : -1);
+  const sleeveNow = () => artNow() === "vinyl" && !!document.querySelector('#fxVinylOpt [data-v="sleeve"].on');
+  const pctNow = () => Math.round((S.vinylPct || 0.86) * 100);
+
+  // How the selected effect sits with the current artwork mode, and what to change if it does not
+  function fitClause(m, f){
+    const art = artNow(), sleeve = sleeveNow();
+    if (f.audio && !S.audioLoaded) return "moves with the music, so load a song first (Media).";
+    if (f.g === "A") {
+      if (art === "off")  return "has a dark centre made for the record: set Artwork to Disc or Vinyl.";
+      if (art === "card") return m === "29" ? "wraps a ring of light around the card." : "is built around a round record: Disc or Vinyl suits it better than Card.";
+      if (sleeve)         return f.rec ? "follows the record out of the sleeve." : "stays centred on the frame: with Sleeve, Eclipse, Tendril and Orbits follow the record instead.";
+      return "is built around the record, a natural match.";
+    }
+    if (f.g === "B") {
+      if (art === "off")  return "fills the whole frame, its best view.";
+      if (art === "card") return "moves behind the still card.";
+      if (sleeve)         return "moves behind the cover and the record.";
+      return pctNow() > 78 ? "sits behind the record: lower Photo Size to about 70% to see more of it." : "sits behind the record.";
+    }
+    if (f.g === "S") return art === "off" ? "grows from the centre across the frame, its best view." : "grows from the centre, behind the artwork: use Artwork Off or a small Photo Size.";
+    return "works behind any artwork mode.";
+  }
+  function fxHint(m){
+    m = String(m);
+    const f = FXI[m];
+    if (!f) return "Effect off \u2192 a plain Background behind the artwork, the cleanest and sharpest look. Set its color in Setup; try Vinyl with Clean text.";
+    const head = f.n + " \u2192 " + fitClause(m, f);
+    const keys = Object.keys(f.d);
+    const badge = document.querySelector('#fxModes .fx-btn[data-m="' + m + '"] .fx-badge');
+    const tail = (badge && m !== "28") ? " Whole song: Full render." : (f.loop ? " Loops exactly." : "");
+    for (let n = Math.min(3, keys.length); n >= 1; n--) {            // as many dials as fit on one row
+      const dials = keys.slice(0, n).map(k => LABEL[k] + " = " + f.d[k]).join(", ") + ".";
+      if ((head + " " + dials + tail).length <= MAXLEN) return head + " " + dials + tail;
+      if ((head + " " + dials).length <= MAXLEN) return head + " " + dials;
+    }
+    return head;
+  }
+  function dialHint(k){
+    if (FINISH[k]) return FINISH[k];
+    const f = FXI[modeNow()];
+    if (!f) return LABEL[k] + " \u2192 no effect is selected: pick one under Background effect.";
+    if (f.d[k]) return LABEL[k] + " in " + f.n + " \u2192 " + f.d[k] + ".";
+    if (k === "speed") return "Speed in " + f.n + " \u2192 how fast it moves.";
+    return LABEL[k] + " has no role in " + f.n + " \u2192 this effect listens to " + Object.keys(f.d).filter(x => x !== "speed").map(x => LABEL[x]).join(", ") + ".";
+  }
+  function artHint(){
+    const a = artNow();
+    if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin, Reactor or Burst, all built around a round record.";
+    if (a === "card") return "Card \u2192 the artwork stands still, like a poster. Good behind it: Bloom, Liquid, Burn, Halftone, or Eclipse for a ring of light.";
+    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record; Full render adds the slide-out at the start.";
+    if (a === "vinyl") return "Vinyl \u2192 black record, your artwork as its label. Cleanest with the effect Off and Clean text; Label image puts another picture on the label.";
+    return "Artwork off \u2192 the effect is the whole picture. Depth 3D, Tunnel, Kaleido, Droste and Vortex show the artwork best this way.";
+  }
+  function formatHint(){
+    const r = S.ratio;
+    if (r === "4:5")  return "Portrait \u2192 the tallest post in the Instagram feed. Vinyl Record fits it well; set Text size to 1.5x.";
+    if (r === "9:16") return "Story \u2192 full-screen vertical. Set Text size to 2x and keep titles short; Vinyl Record fits better than Sleeve.";
+    if (r === "16:9") return "Wide \u2192 YouTube. Full-frame effects have the most room here; if YouTube serves it in low quality, upload the same file again.";
+    return "Square \u2192 the Instagram and Facebook feed. Everything is tuned for it, and Sleeve fits best here.";
+  }
+  function renderHint(isLoop){
+    if (!isLoop) return "Full render \u2192 every frame is drawn: needed for FULL effects on a whole song, and it plays the text and Sleeve entrances.";
+    const rev = 60 / Math.max(S.rpm, 1), loop = Math.round(rev * Math.max(1, Math.ceil(12 / rev)));
+    return "Fast loop \u2192 a loop of about " + loop + " s is drawn and repeated; shorter clips are drawn in full. Entrances play only on Full render.";
+  }
+  const TEXT = {
+    off:   "Text off \u2192 nothing is written on the video.",
+    clean: "Clean \u2192 two centred lines. Dark ink on a light plain Background, light ink everywhere else. Best with Vinyl and the effect Off.",
+    a:     "Style A \u2192 type only, with a line in the artwork's color and its own dark fade: the safest choice over busy effects.",
+    b:     "Style B \u2192 a pill with moving level bars, it reads as now playing. Tag and label sit on the second row.",
+    c:     "Style C \u2192 a light sticker, slightly tilted, like the one on a new record. Strongest on dark pictures."
+  };
+  const SIZE = { "1":"Text 1x \u2192 right for Square and Wide.", "1.5":"Text 1.5x \u2192 right for Portrait.", "2":"Text 2x \u2192 right for Story. A long title is narrowed to fit the frame." };
+  const TABS = {
+    media:   "Media \u2192 load the artwork, then a song. Clip length sets how much of it is used: the full song, 30 seconds or 1 minute.",
+    setup:   "Setup \u2192 format, background color, disc speed and direction, size of the artwork.",
+    artwork: "Artwork \u2192 how the cover is shown (Disc, Card, Vinyl or none) and the text on the video.",
+    effects: "Effects \u2192 every thumbnail is drawn from your own artwork. Presets keep a look; Random proposes one."
   };
 
-  let gi = 0, hold = null, rot = null;
+  let gi = 0, hold = null, rot = null, flip = false;
   function show(msg, dim){
     el.style.opacity = "0";
     setTimeout(()=>{ el.textContent = msg; el.style.opacity = dim ? "0.9" : "1"; }, 250);
   }
-  function rotate(){
+  function rotate(){                                            // when idle: the hint of the current effect, then a general one, in turns
+    clearInterval(rot);
     rot = setInterval(()=>{
+      flip = !flip;
+      if (flip && S.imageLoaded) { show(fxHint(modeNow()), true); return; }
       gi = (gi + 1) % GENERAL.length;
       show(GENERAL[gi], true);
     }, 9000);
@@ -4940,24 +5056,33 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     show(msg);
     hold = setTimeout(rotate, 16000);
   }
+  const later = fn => setTimeout(() => tip(fn()), 0);            // after the control's own handler has updated the state
+  const on = (sel, ev, fn) => { const n = typeof sel === "string" ? document.querySelector(sel) : sel; if (n) n.addEventListener(ev, fn); };
   show(GENERAL[0], true);
   rotate();
 
-  document.getElementById("fxModes").addEventListener("click", e=>{
-    const b = e.target.closest("button"); if(!b) return;
-    tip(PAIR[b.dataset.m]);
-  });
-  document.getElementById("fxArt").addEventListener("click", e=>{
-    const b = e.target.closest("button"); if(!b) return;
-    if(b.dataset.a === "vinyl") tip("Vinyl \u2192 your artwork is the centre label of a spinning record. Pick Sleeve to show it as the cover with the record pulled out. Photo Size sets the size.");
-    if(b.dataset.a === "card") tip("Card pairs best with Bloom or Eclipse behind it \u2192 or Burst when it should land on the music.");
-  });
-  document.getElementById("fxRender").addEventListener("click", e=>{
-    const b = e.target.closest("button"); if(!b) return;
-    tip(b.dataset.r === "loop"
-      ? "Fast loop \u2192 any song length exports in about a minute."
-      : "Full render \u2192 every frame drawn on the GPU; FULL-marked effects complete their motion.");
-  });
+  on("#fxModes", "click", e => { const b = e.target.closest("button"); if (b) later(() => fxHint(b.dataset.m)); });
+  on("#fxArt", "click", e => { if (e.target.closest("button")) later(artHint); });
+  on("#fxVinylOpt", "click", e => { if (e.target.closest("button")) later(artHint); });
+  on("#fxRender", "click", e => { const b = e.target.closest("button"); if (b) later(() => renderHint(b.dataset.r === "loop")); });
+  on("#fxDirs", "click", e => { const b = e.target.closest("button"); if (b) later(() => b.dataset.d === "-1" ? "Reverse \u2192 the effect runs the other way: tunnels and falls move outward, growth and orbits turn back." : "Forward \u2192 the effect's own direction."); });
+  on("#txtStyle", "click", e => { const b = e.target.closest("button"); if (b && b.dataset.ts) later(() => TEXT[b.dataset.ts]); });
+  on("#txtSize", "click", e => { const b = e.target.closest("button"); if (b) later(() => SIZE[b.dataset.tz]); });
+  on("#durationControl", "click", e => { const b = e.target.closest("button"); if (b && !b.disabled) later(() => {
+    if (b.dataset.sec === "0") return "Full song \u2192 the whole track is exported. Effects marked FULL then need Export render set to Full render.";
+    return (b.dataset.sec === "60" ? "1 min" : "30 sec") + " \u2192 " + (S.audioLoaded ? "drag the green window on the waveform to choose the part; Preview plays it." : "a silent video of that length. Load a song to choose a part of it.");
+  }); });
+  on("#layTabs", "click", e => { const b = e.target.closest("button"); if (b) later(() => TABS[b.dataset.t]); });
+  document.querySelectorAll(".format-card").forEach(c => c.addEventListener("click", () => later(formatHint)));
+  const DIAL_IDS = { fxSpeed:"speed", fxWarp:"warp", fxStreak:"streak", fxSwirl:"swirl", fxScale:"scale", fxTrail:"trail", fxCa:"ca", fxGlow:"glow", fxGrain:"grain", fxVig:"vig" };
+  Object.keys(DIAL_IDS).forEach(id => on("#" + id, "input", () => tip(dialHint(DIAL_IDS[id]))));
+  on("#rpmSlider", "input", () => later(() => "Speed " + S.rpm + " RPM \u2192 one turn every " + Math.round(600 / Math.max(S.rpm, 1)) / 10 + " s. Eclipse, Tendril, Orbits and Twinspin keep their own pace at any disc speed."));
+  on("#sizeSlider", "input", () => later(() => { const p = pctNow(); return "Photo Size " + p + "% \u2192 " + (p > 78 ? "the artwork leads and little of the effect shows around it." : p < 62 ? "the effect leads and the artwork is an accent." : "balanced: the artwork leads, the effect frames it."); }));
+  on("#rotControl", "click", e => { if (e.target.closest("button")) later(() => "Rotation \u2192 direction of the disc. Eclipse, Tendril, Orbits and Twinspin are tied to the disc and turn with it."); });
+  on("#bgColor", "input", () => tip("Background \u2192 the color behind the artwork when the effect is Off. Your choice is remembered in this browser."));
+  on("#imgInput", "change", () => setTimeout(() => tip("Artwork loaded \u2192 choose how it is shown in Artwork, then pick an effect: every thumbnail is drawn from your cover."), 900));
+  on("#lblImgInput", "change", () => setTimeout(() => tip("Label image \u2192 this picture is on the record's label only; the cover and the colors of the effects still come from the main artwork."), 400));
+  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, modes: Object.keys(FXI) };   // for checks from the console
 })();
 
 // Scroll wheel over the video forwards to the menu, so the preview never moves
