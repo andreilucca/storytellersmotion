@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b34 (2026-11-14)**
+**Current version: WEB v7.0-b48 (2026-11-14)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -24,10 +24,10 @@ no watermark, no account. Your files never leave your device.
     An optional **Label image** puts a different picture on the centre label,
     for example the Side A artwork.
   - **Off**: no artwork layer, the background effect fills the whole frame.
-- **Effects engine (WebGL)**: 21 animated background effects (Melt, Vortex,
+- **Effects engine (WebGL)**: 23 animated background effects (Melt, Vortex,
   Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom, Spectrum,
   Reactor, VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
-  Cymatics, Burst, Eclipse) with per-effect settings, palette editing, and
+  Cymatics, Burst, Eclipse, Tendril, Orbits) with per-effect settings, palette editing, and
   forward and reverse direction. Colors come from the artwork.
 - **Every effect has its own look**: selecting an effect loads its full
   default look, including the finishing dials. Reset restores that look.
@@ -40,6 +40,24 @@ no watermark, no account. Your files never leave your device.
   render.
 - **Tabbed panel**: four tabs (Media, Setup, Artwork, Effects), a thumbnail
   of every effect rendered from your artwork, and Record always in view.
+- **Hint line**: the line at the top right is built from the current state.
+  Pick an effect and it says how that effect sits with the chosen artwork
+  mode and what its main dials do; move a slider and it says what that
+  slider does in the selected effect, or that the effect does not use it.
+  Format, artwork mode, text style and render mode each bring their own hint.
+- **Entrance switches** (Artwork tab), each On or Off: "Sleeve opening"
+  (record out, then text, then the effect grows from the record), "Effect
+  opening" on Disc, Card and Vinyl Record (the effect starts after one
+  second and grows out of the artwork, then the text), and "Text entrance".
+  They act on Full render only; Off puts everything in place from the
+  first frame. Saved in presets.
+- **Play opening** (Artwork tab): plays the start of the video in the
+  preview exactly as Full render exports it. It also plays when one of the
+  entrance switches is flipped.
+- **Thermal**: a color layer over any effect (Effects tab). The brightness
+  of the effect becomes cold to hot color; the cover, the record and the
+  text keep their own colors. On or Off, with an intensity slider. Saved in
+  presets. Not available with Feedback.
 - **Presets and Random**: Save keeps the whole look under a name (artwork
   mode, effect and its dials, disc speed and direction, photo size,
   background color, text style). Presets live in your own browser. Random
@@ -174,7 +192,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b34 · 2026-11-14`.
+  `Storytellers Motion · WEB v7.0-b48 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
