@@ -902,7 +902,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b39 · 2026-11-14 · test build: with Sleeve the effect waits for the record to slide out, then fades in</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b41 · 2026-11-14 · test build: in the Sleeve opening the effect grows out of the record until it fills the frame</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -1127,11 +1127,12 @@ const TXT = { style: "off", title: "", sub: "", tag: "", size: 1 };
 function textOn(){                                       // text works with every artwork mode
   return TXT.style !== "off" && !!(TXT.title.trim() || TXT.sub.trim() || TXT.tag.trim());
 }
-// Entrance on a full render: the text fades in and settles during the first second.
+// Entrance on a full render: the text fades in slowly and settles, over about two seconds.
+// With Sleeve it waits until the record has left the cover (5.0 s); otherwise it starts at 1.0 s.
 // Returns 0..1; looped exports and the preview show the text in place (1).
-function txtIntro(tSec){
-  const p = Math.max(0, Math.min(1, (tSec - 0.25) / 0.70));
-  return 1 - Math.pow(1 - p, 3);
+function txtIntro(tSec, afterSleeve){
+  const p = Math.max(0, Math.min(1, (tSec - (afterSleeve ? 5.0 : 1.0)) / 2.2));
+  return p*p*p*(p*(6*p - 15) + 10);                    // very soft start and stop
 }
 function textShift(){ return textOn() ? 0.045 * Math.min(TXT.size, 2.2) : 0; }   // a larger text needs more room
 // Margins that keep the text clear of the Instagram interface. Published guides
@@ -1167,7 +1168,7 @@ function drawTextOverlay(c, W, H, progress, tSec, intro){
   c.save();
   if (intro !== undefined && intro < 1) {                 // entrance: fade in and rise into place
     c.globalAlpha = Math.max(0, intro);
-    c.translate(0, (1 - intro) * 26 * k);
+    c.translate(0, (1 - intro) * 16 * k);
   }
   c.textBaseline = "alphabetic";
   if ("letterSpacing" in c) c.letterSpacing = "0px";
@@ -2198,7 +2199,7 @@ uniform vec4  uLay;       // Burst: rotation, spin and drift of the current layo
 uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
 uniform float uSlide;     // Sleeve: 0 = the record is inside the cover, 1 = pulled out
-uniform float uFxIn;      // 0 = plain background, 1 = the effect: lets the effect wait for the Sleeve entrance
+uniform float uFxIn;      // 0 = plain background, 1 = the effect everywhere; in between the effect grows outward from the record
 uniform sampler2D uLabel; // optional separate picture for the record's centre label
 uniform float uHasLabel;  // 1 when that picture is set
 
@@ -3005,7 +3006,19 @@ void main(){
   float t = uTime*uSpeed;
   vec2 FC = gl_FragCoord.xy - vec2(0.0, uShift*uRes.y);     // the picture moves up to make room for the text line
   vec3 col = background(vUv - vec2(0.0, uShift), t, aspect);
-  col = mix(uBgCol, col, uFxIn);                             // the effect fades in once the record is out of its sleeve
+  if(uFxIn < 1.0){
+    // The effect grows out of the record: it is shown inside a soft circle centred on the record,
+    // which starts under the rim and widens until it has covered the whole frame.
+    vec2 qg = (FC - 0.5*uRes)/min(uRes.x, uRes.y);
+    vec2 hf = 0.5*uRes/min(uRes.x, uRes.y);
+    float R0 = (uArt == 2) ? uDiscR*1.46 : uDiscR, cx = 0.0;
+    if(uArt == 4){ vec3 sg = sleeveGeo(); cx = sg.z; R0 = sg.x; }
+    qg.x -= cx;
+    float far  = length(vec2(hf.x + abs(cx), hf.y));         // from the record's centre to the farthest corner
+    float soft = 0.08 + 0.32*uFxIn;                          // the front gets softer as it travels
+    float rad  = mix(R0*0.92, far + soft + 0.05, uFxIn);
+    col = mix(uBgCol, col, smoothstep(rad, rad - soft, length(qg)));
+  }
 
   if(uArt == 2){
     // ── Poster card: the square artwork centred on the frame, no rotation ──
@@ -4047,16 +4060,20 @@ let hitMap = null, hitSel = null, hitGap = -1, hitJob = 0;   // analysis of the 
 let burstKey = "", burstExportT = null;                      // layout on the GPU, audio time forced by the exporter
 let slideExport = null;                                      // Sleeve entrance, set per frame by the exporter (null = record out)
 let fxInExport = null;                                       // how far the effect has faded in, set per frame by the exporter (null = fully on)
-// With Sleeve on a full render the effect stays hidden while the record slides out (done at 3.0 s),
-// then fades in over the next 1.2 s: 0 hidden, 1 fully on.
+// fxIntro: 0 = plain background, 1 = the effect across the whole frame. From 8.0 s it grows out of
+// the record for 4 s, until it has covered the artwork and the frame.
 function fxIntro(tSec){
-  const p = Math.max(0, Math.min(1, (tSec - 3.0) / 1.2));
+  const p = Math.max(0, Math.min(1, (tSec - 8.0) / 4.0));
   return p*p*(3 - 2*p);
 }
-// The record leaves the cover during the first three seconds of a full render: 0 inside, 1 out.
+// Sleeve opening on a full render, one thing at a time:
+//   0.5 to 4.5 s   the record slides slowly out of the cover
+//   5.0 to 7.2 s   the text fades in (txtIntro)
+//   8.0 to 12.0 s  the effect grows out of the record until it fills the frame
+// sleeveIntro: 0 = record inside, 1 = out.
 function sleeveIntro(tSec){
-  const p = Math.max(0, Math.min(1, (tSec - 0.40) / 2.60));
-  return p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3)/2;
+  const p = Math.max(0, Math.min(1, (tSec - 0.50) / 4.00));
+  return p*p*p*(p*(6*p - 15) + 10);
 }
 // Analyse the decoded track once, right after it loads (off the click handler so the UI stays responsive).
 function setHitMap(buf){
@@ -4461,7 +4478,7 @@ async function liveExport(){
           const sc = Math.max(W/iw, H/ih);
           cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
         }
-        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS, fastLoop ? 1 : txtIntro(outIdx / OUT_FPS));   // the entrance plays only when the file is not a loop
+        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS, fastLoop ? 1 : txtIntro(outIdx / OUT_FPS, st.art === "vinyl" && st.sleeve));   // the entrance plays only when the file is not a loop
         const vf = new VideoFrame(comp, {
           timestamp: Math.round(outIdx * 1e6 / OUT_FPS),
           duration:  Math.round(1e6 / OUT_FPS)
@@ -4650,7 +4667,7 @@ async function liveExportRealtime(){
       const sc = Math.max(W/iw, H/ih);
       cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
     }
-    drawTextOverlay(cc, W, H, null, el, fastLoop ? 1 : txtIntro(el));
+    drawTextOverlay(cc, W, H, null, el, fastLoop ? 1 : txtIntro(el, false));
     // mirror the live render into the preview canvas (every 3rd frame)
     frameN++;
     if(frameN % 3 === 0){
@@ -5017,7 +5034,7 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     const a = artNow();
     if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin, Reactor or Burst, all built around a round record.";
     if (a === "card") return "Card \u2192 the artwork stands still, like a poster. Good behind it: Bloom, Liquid, Burn, Halftone, or Eclipse for a ring of light.";
-    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. On Full render the record slides out, then the effect fades in.";
+    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. On Full render the record slides out, then the effect grows from it.";
     if (a === "vinyl") return "Vinyl \u2192 black record, your artwork as its label. Cleanest with the effect Off and Clean text; Label image puts another picture on the label.";
     return "Artwork off \u2192 the effect is the whole picture. Depth 3D, Tunnel, Kaleido, Droste and Vortex show the artwork best this way.";
   }
