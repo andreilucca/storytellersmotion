@@ -409,6 +409,13 @@
   }
 </style>
 <style id="premiumPass">
+  /* Text size: one small joined control at the right end of the heading, values in a muted orange */
+  #txtSize { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
+  #txtSize button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
+                    text-transform: none; color: #a87840; border-left: 1px solid #33291d; transition: color .15s, background .15s; }
+  #txtSize button:first-child { border-left: none; }
+  #txtSize button:hover { color: #cf9450; }
+  #txtSize button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
   .txt-models { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
   .txt-models span { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6f6f; padding-right: 4px; }
   .txt-models .fx-btn { padding: 6px 2px; min-height: 28px; font-size: 0.68rem; }
@@ -709,7 +716,9 @@
         <button class="fx-btn" data-v="sleeve" title="The artwork as the record cover, with the record pulled halfway out of it and spinning">Sleeve</button>
       </div>
       <div id="fxTextBlock" style="display:none">
-        <div class="fx-lbl">Text on the video</div>
+        <div class="fx-lbl">Text on the video
+          <span id="txtSize" title="Text size"><button data-tz="1" class="on">1x</button><button data-tz="1.5">1.5x</button><button data-tz="2">2x</button></span>
+        </div>
         <div id="txtStyle">
           <div class="fx-grid2">
             <button class="fx-btn on" data-ts="off" title="No text">Off</button>
@@ -834,7 +843,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b22 · 2026-11-14 · test build: text styles are Clean and Style (A, B, C)</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b26 · 2026-11-14 · test build: text size is one small control in the heading of the text block</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -1055,12 +1064,12 @@ function buildSprites() {
 // ── TEXT OVERLAY ──────────────────────────────────────────────────────────
 // Drawn on the 2D canvas over every frame, in the preview and in each export
 // path, at the output resolution, so it is as sharp in the file as on screen.
-const TXT = { style: "off", title: "", sub: "", tag: "" };
+const TXT = { style: "off", title: "", sub: "", tag: "", size: 1 };
 function textOn(){                                       // text belongs to the Vinyl artwork mode
   if (TXT.style === "off" || !(TXT.title.trim() || TXT.sub.trim() || TXT.tag.trim())) return false;
   return !!(window.FX && FX.art && FX.art() === "vinyl");
 }
-function textShift(){ return textOn() ? 0.045 : 0; }
+function textShift(){ return textOn() ? 0.045 * Math.min(TXT.size, 2.2) : 0; }   // a larger text needs more room
 // Margins that keep the text clear of the Instagram interface. Published guides
 // for 9:16 disagree (bottom reserve from 250 to 420 px of 1920), so the wider one is used.
 function textSafe(W, H){
@@ -1088,7 +1097,7 @@ function txtRound(c, x, y, w, h, r){
 // progress: 0..1 along the clip, or null when it cannot be shown (looped exports)
 function drawTextOverlay(c, W, H, progress, tSec){
   if (!textOn()) return;
-  const k = Math.min(W, H) / 1080, sf = textSafe(W, H);
+  const k = Math.min(W, H) / 1080 * TXT.size, sf = textSafe(W, H);        // Size multiplies everything: letters, card, spacing
   const title = TXT.title.trim().toUpperCase(), sub = TXT.sub.trim(), tag = TXT.tag.trim().toUpperCase();
   const maxW = W * (1 - 2 * sf.side), baseY = H * (1 - sf.bottom);
   c.save();
@@ -2648,10 +2657,20 @@ vec3 background(vec2 uv, float t, float aspect){
         float pd = abs(q2.x*dirv.y - q2.y*dirv.x);
         float len = max(eb.z*grow, 0.0005);
         add = e*step(0.0, al)*smoothstep(len, len*0.80, al)*(smoothstep(eb.w*gw, eb.w*gw*0.30, pd) + 0.18*uStreak*exp(-pd*90.0));
-      } else {                                            // ring: a shockwave leaving the disc
+      } else if(ea.x < 7.5){                              // ring: a shockwave leaving the disc
         float dR = abs(length(q2) - (eb.x*rs + eb.z*grow));
         float dash = eb.w > 0.5 ? step(0.5, fract(atan(q2.y, q2.x)*eb.w/6.28318 + ea.w*7.0)) : 1.0;
         add = e*dash*(smoothstep(eb.y*gw, eb.y*gw*0.30, dR) + 0.15*uStreak*exp(-dR*70.0));
+      } else if(ea.x < 8.5){                              // dot: a star point
+        float dd = length(q2);
+        add = e*(smoothstep(eb.x*gw, eb.x*gw*0.35, dd) + 0.30*uStreak*exp(-dd/(eb.x*2.5 + 0.0005)));
+      } else if(ea.x < 9.5){                              // arc: part of a circle, drawing itself round
+        float da = mod(atan(q2.y, q2.x) - eb.z, 6.28318);
+        add = e*step(da, eb.w*grow)*smoothstep(eb.y*gw, eb.y*gw*0.30, abs(length(q2) - eb.x));
+      } else {                                            // rose: petals around a centre (mandala, flower, wings)
+        float an = atan(q2.y, q2.x) - eb.z;
+        float rr = eb.x*(0.25 + 0.75*abs(cos(an*eb.y*0.5)))*(0.55 + 0.45*grow);
+        add = e*smoothstep(eb.w*gw*1.7, eb.w*gw*0.4, abs(length(q2) - rr));
       }
       float tone = step(0.5, fract(ea.w*3.7));
       lumA += add*(1.0 - tone); lumB += add*tone;
@@ -3368,17 +3387,23 @@ function ensureAudio(){
 //                                  5 glint: size, diagonal flag
 //                                  6 ray: angle, start (in disc radii), length, thickness
 //                                  7 ring: radius (in disc radii), thickness, expansion, dash count (0 = solid)
-const FX_BURST_N = 40, FX_BURST_FAMILIES = 7;
+//                                  8 dot: size
+//                                  9 arc: radius, thickness, start angle, span
+//                                  10 rose: size, petals, rotation, thickness
+const FX_BURST_N = 40, FX_BURST_FAMILIES = 24;
 function fxBurstRng(seed){
   let a = (seed * 2654435761) >>> 0;
   return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
                  t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
-// 0 grid, 1 rays, 2 rings, 3 bars, 4 diagonal, 5 flash (the light inverted frame), 6 mosaic.
-// Every run of seven bursts plays all seven once, in a shuffled order, and never repeats across the seam.
+// 24 compositions. 0 grid, 1 rays, 2 rings, 3 bars, 4 diagonal, 5 flash (the light inverted frame), 6 mosaic,
+// 7 polygon constellation, 8 star chain, 9 hexagram, 10 galaxy, 11 twin galaxies, 12 flower of life, 13 mandala,
+// 14 lotus corners, 15 butterflies, 16 mushrooms, 17 orbits, 18 sunburst, 19 nested triangles, 20 spirograph,
+// 21 eye, 22 star field, 23 waves.
+// Every run of 24 bursts plays all 24 once, in a shuffled order, and never repeats across the seam.
 function fxBurstFamily(seed){
   const F = FX_BURST_FAMILIES, i = Math.max(0, seed - 1), block = Math.floor(i / F);
-  const perm = (b) => { const r = fxBurstRng(7919 + b * 31), p = [0, 1, 2, 3, 4, 5, 6];
+  const perm = (b) => { const r = fxBurstRng(7919 + b * 31), p = Array.from({ length: F }, (_, q) => q);
     for(let k = F - 1; k > 0; k--){ const j = Math.floor(r() * (k + 1)); const x = p[k]; p[k] = p[j]; p[j] = x; } return p; };
   const p = perm(block);
   if(block > 0 && p[0] === perm(block - 1)[F - 1]){ const x = p[0]; p[0] = p[1]; p[1] = x; }
@@ -3462,7 +3487,7 @@ function fxBurstLayout(seed, aspect, rs){
     lay[2] = (rnd() - 0.5) * 0.08; lay[3] = (rnd() - 0.5) * 0.04;
   }
   else if(fam === 5){ grid(0.55); }         // dense layout, shown as the light inverted frame
-  else {                                    // mosaic: windows onto the artwork set around the disc
+  else if(fam === 6){                       // mosaic: windows onto the artwork set around the disc
     const cnt = 9, off = rnd() * TAU;
     for(let i = 0; i < cnt; i++){
       const ang = off + i * TAU / cnt + (rnd() - 0.5) * 0.25, rr = rs * (1.22 + 0.30 * rnd()), q = pol(rr, ang);
@@ -3475,6 +3500,168 @@ function fxBurstLayout(seed, aspect, rs){
     }
     for(let i = 0; i < 3; i++) put(7, 0, 0, 0.20 + 0.60 * rnd(), 1.05 + 0.50 * rnd(), 0.0010 + 0.0012 * rnd(), 0.02 + 0.05 * rnd(), 40 + Math.floor(rnd() * 60));
     lay[1] = (rnd() > 0.5 ? 1 : -1) * (0.10 + 0.18 * rnd());
+  }
+  // ── shapes drawn from lines, dots, circles, arcs and petals; coordinates in frame-height units, origin at the centre ──
+  const TH = () => 0.05 + 0.60 * rnd();
+  const seg = (ax, ay, bx, by, th, thick) => put(6, ax / aspect, ay, th, Math.atan2(by - ay, bx - ax), 0, Math.hypot(bx - ax, by - ay), thick || 0.0017);
+  const dot = (x, y, th, size) => put(8, x / aspect, y, th, size * 1.25, 0, 0, 0);
+  const ringAt = (x, y, th, rad, thick, dash) => put(7, x / aspect, y, th, rad / rs, thick || 0.0016, 0, dash || 0);
+  const arc = (x, y, th, rad, thick, start, span) => put(9, x / aspect, y, th, rad, thick || 0.0018, start, span);
+  const rose = (x, y, th, size, n, rot, thick) => put(10, x / aspect, y, th, size, n, rot, thick || 0.0017);
+  const glint = (x, y, th, size) => put(5, x / aspect, y, th, size, 1, 0, 0);
+  const poly = (n, rad, rot) => Array.from({ length: n }, (_, i) => [rad * Math.cos(rot + i * TAU / n), rad * Math.sin(rot + i * TAU / n)]);
+  if(fam === 7){                            // a constellation drawn as a regular polygon with its inner star
+    const n = 3 + Math.floor(rnd() * 5), v = poly(n, rs * (1.20 + 0.22 * rnd()), rnd() * TAU);
+    for(let i = 0; i < n; i++){
+      const a = v[i], b = v[(i + 1) % n], c2 = v[(i + 2) % n];
+      seg(a[0], a[1], b[0], b[1], 0.05 + 0.3 * rnd());
+      if(n >= 5) seg(a[0], a[1], c2[0], c2[1], 0.25 + 0.4 * rnd(), 0.0010);
+      dot(a[0], a[1], 0.04, 0.009); dot((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, TH(), 0.004);
+    }
+    ringAt(0, 0, 0.3, Math.hypot(v[0][0], v[0][1]) * 1.12, 0.0011, 48);
+    for(let i = 0; i < 6; i++){ const q = pol(rs * (1.05 + 0.7 * rnd()), rnd() * TAU); dot(q[0] * aspect, q[1], TH(), 0.003 + 0.003 * rnd()); }
+    lay[1] = (rnd() - 0.5) * 0.25;
+  }
+  else if(fam === 8){                       // a chain of stars joined into one figure
+    const pts = Array.from({ length: 13 }, () => { const a = rnd() * TAU, r = rs * (1.06 + 0.62 * rnd()); return [a, r * Math.cos(a), r * Math.sin(a)]; }).sort((p, q) => p[0] - q[0]);
+    for(let i = 0; i < pts.length; i++){
+      const a = pts[i], b = pts[(i + 1) % pts.length];
+      if(i % 5 !== 4) seg(a[1], a[2], b[1], b[2], 0.08 + 0.5 * rnd(), 0.0011);
+      dot(a[1], a[2], 0.04 + 0.2 * rnd(), 0.005 + 0.007 * rnd());
+    }
+    for(let i = 0; i < 3; i++){ const a = pts[Math.floor(rnd() * pts.length)]; glint(a[1], a[2], 0.2 + 0.4 * rnd(), 0.7 + 0.8 * rnd()); }
+  }
+  else if(fam === 9){                       // hexagram: a hexagon, two triangles and a circle on every corner
+    const v = poly(6, rs * 1.32, rnd() * TAU);
+    for(let i = 0; i < 6; i++){
+      const a = v[i], b = v[(i + 1) % 6], c2 = v[(i + 2) % 6];
+      seg(a[0], a[1], b[0], b[1], 0.06 + 0.2 * rnd()); seg(a[0], a[1], c2[0], c2[1], 0.15 + 0.35 * rnd(), 0.0011);
+      ringAt(a[0], a[1], 0.2 + 0.4 * rnd(), rs * 0.15, 0.0011, 0); dot(a[0], a[1], 0.05, 0.007);
+    }
+    ringAt(0, 0, 0.1, rs * 1.32, 0.0012, 0); ringAt(0, 0, 0.35, rs * 1.52, 0.0010, 60);
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * 0.18;
+  }
+  else if(fam === 10){                      // a galaxy: two spiral arms of stars around the disc
+    const off = rnd() * TAU, dir = rnd() > 0.5 ? 1 : -1;
+    for(let arm = 0; arm < 2; arm++) for(let j = 0; j < 16; j++){
+      const ang = off + arm * Math.PI + dir * j * 0.40, r = rs * (0.98 + 0.052 * j) + (rnd() - 0.5) * 0.02;
+      dot(r * Math.cos(ang), r * Math.sin(ang), 0.03 + 0.035 * j, 0.0035 + 0.007 * rnd() * (1 - j / 20));
+    }
+    ringAt(0, 0, 0.1, rs * 1.03, 0.0016, 0);
+    for(let i = 0; i < 4; i++){ const q = pol(rs * (1.1 + 0.6 * rnd()), rnd() * TAU); glint(q[0] * aspect, q[1], 0.2 + 0.5 * rnd(), 0.6 + 0.8 * rnd()); }
+    lay[1] = dir * 0.30;
+  }
+  else if(fam === 11){                      // twin galaxies in opposite corners
+    const a0 = Math.PI / 4 + Math.floor(rnd() * 4) * Math.PI / 2;
+    for(let g = 0; g < 2; g++){
+      const cx = rs * 1.42 * Math.cos(a0 + g * Math.PI), cy = rs * 1.42 * Math.sin(a0 + g * Math.PI), off = rnd() * TAU, dir = g ? 1 : -1;
+      for(let arm = 0; arm < 2; arm++) for(let j = 0; j < 7; j++){
+        const ang = off + arm * Math.PI + dir * j * 0.55, r = 0.018 + 0.021 * j;
+        dot(cx + r * Math.cos(ang), cy + r * Math.sin(ang), 0.04 + 0.07 * j, 0.0030 + 0.0045 * rnd());
+      }
+      glint(cx, cy, 0.05, 0.9); ringAt(cx, cy, 0.3, 0.19, 0.0010, 36);
+    }
+    for(let i = 0; i < 6; i++){ const q = pol(rs * (1.05 + 0.65 * rnd()), rnd() * TAU); dot(q[0] * aspect, q[1], TH(), 0.003); }
+  }
+  else if(fam === 12){                      // flower of life: seven equal circles
+    const R0 = rs * 0.66, off = rnd() * TAU;
+    ringAt(0, 0, 0.05, R0);
+    for(let i = 0; i < 6; i++){ const a = off + i * TAU / 6; ringAt(R0 * Math.cos(a), R0 * Math.sin(a), 0.06 + 0.07 * i, R0); }
+    ringAt(0, 0, 0.25, R0 * 2, 0.0016, 0); ringAt(0, 0, 0.45, R0 * 2.14, 0.0010, 72);
+    for(let i = 0; i < 12; i++){ const a = off + i * TAU / 12; dot(R0 * 2 * Math.cos(a), R0 * 2 * Math.sin(a), 0.15 + 0.5 * rnd(), 0.005); }
+    lay[1] = (rnd() - 0.5) * 0.3;
+  }
+  else if(fam === 13){                      // mandala: three rings of petals
+    const rot = rnd() * TAU;
+    rose(0, 0, 0.05, rs * 1.28, 6, rot); rose(0, 0, 0.15, rs * 1.50, 12, rot + 0.26, 0.0011); rose(0, 0, 0.3, rs * 1.12, 8, rot);
+    ringAt(0, 0, 0.2, rs * 1.60, 0.0010, 64); ringAt(0, 0, 0.4, rs * 1.04, 0.0014, 0);
+    for(let i = 0; i < 12; i++){ const a = rot + i * TAU / 12; dot(rs * 1.60 * Math.cos(a), rs * 1.60 * Math.sin(a), 0.1 + 0.5 * rnd(), 0.0045); }
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * 0.22;
+  }
+  else if(fam === 14){                      // a lotus in each corner
+    const cx = aspect * 0.36, cy = 0.36;
+    for(let i = 0; i < 4; i++){
+      const x = (i & 1 ? 1 : -1) * cx, y = (i & 2 ? 1 : -1) * cy, n = 5 + Math.floor(rnd() * 4), rot = rnd() * TAU;
+      rose(x, y, 0.05 + 0.12 * i, 0.105, n, rot); rose(x, y, 0.25 + 0.1 * i, 0.062, n, rot + 0.4, 0.0011);
+      ringAt(x, y, 0.3 + 0.3 * rnd(), 0.125, 0.0010, 40); dot(x, y, 0.05, 0.006);
+    }
+    for(let i = 0; i < 8; i++) put(6, 0, 0, 0.2 + 0.5 * rnd(), i * TAU / 8, 1.04, 0.05 + 0.08 * rnd(), 0.0011);
+  }
+  else if(fam === 15){                      // butterflies: two pairs of wings, a body and antennae
+    for(let b = 0; b < 4; b++){
+      const ang = Math.PI / 4 + b * Math.PI / 2 + (rnd() - 0.5) * 0.35, r = rs * (1.27 + 0.06 * rnd()), x = r * Math.cos(ang), y = r * Math.sin(ang), sz = 0.075 + 0.02 * rnd(), rot = (rnd() - 0.5) * 1.6;
+      const ux = Math.cos(rot + Math.PI / 2), uy = Math.sin(rot + Math.PI / 2), wx = Math.cos(rot), wy = Math.sin(rot), th = 0.05 + 0.18 * b;
+      rose(x, y, th, sz, 2, rot, 0.0014); rose(x - ux * sz * 0.10, y - uy * sz * 0.10, th + 0.08, sz * 0.62, 2, rot, 0.0011);
+      seg(x - ux * sz * 0.34, y - uy * sz * 0.34, x + ux * sz * 0.36, y + uy * sz * 0.36, th, 0.0022);
+      seg(x + ux * sz * 0.36, y + uy * sz * 0.36, x + ux * sz * 0.66 + wx * sz * 0.20, y + uy * sz * 0.66 + wy * sz * 0.20, th + 0.05, 0.0010);
+      seg(x + ux * sz * 0.36, y + uy * sz * 0.36, x + ux * sz * 0.66 - wx * sz * 0.20, y + uy * sz * 0.66 - wy * sz * 0.20, th + 0.05, 0.0010);
+      dot(x + wx * sz * 0.55, y + wy * sz * 0.55, th + 0.1, 0.004); dot(x - wx * sz * 0.55, y - wy * sz * 0.55, th + 0.1, 0.004);
+    }
+  }
+  else if(fam === 16){                      // mushrooms: a domed cap, gills, a stem and spots
+    for(let m = 0; m < 4; m++){
+      const ang = Math.PI / 4 + m * Math.PI / 2 + (rnd() - 0.5) * 0.30, r = rs * (1.27 + 0.05 * rnd()), bx = r * Math.cos(ang), by = r * Math.sin(ang) - 0.045, h = 0.10 + 0.03 * rnd(), cr = h * (0.55 + 0.25 * rnd()), cy = by + h * 0.55, th = 0.05 + 0.17 * m;
+      arc(bx, cy, th, cr, 0.0016, 0, Math.PI); seg(bx - cr, cy, bx + cr, cy, th, 0.0014);
+      arc(bx, cy, th + 0.1, cr * 0.62, 0.0010, 0, Math.PI);
+      seg(bx - cr * 0.16, cy, bx - cr * 0.20, by, th + 0.03, 0.0013); seg(bx + cr * 0.16, cy, bx + cr * 0.20, by, th + 0.03, 0.0013);
+      seg(bx - cr * 0.20, by, bx + cr * 0.20, by, th + 0.03, 0.0013);
+      dot(bx - cr * 0.45, cy + cr * 0.42, th + 0.12, 0.0045); dot(bx + cr * 0.30, cy + cr * 0.55, th + 0.16, 0.0055); dot(bx, cy + cr * 0.80, th + 0.2, 0.0035);
+    }
+  }
+  else if(fam === 17){                      // orbits: rings with a planet on each
+    for(let i = 0; i < 5; i++){
+      const rad = rs * (1.08 + 0.17 * i), a = rnd() * TAU, th = 0.05 + 0.14 * i;
+      ringAt(0, 0, th, rad, 0.0011, i % 2 ? 56 : 0);
+      dot(rad * Math.cos(a), rad * Math.sin(a), th, 0.006 + 0.007 * rnd());
+      if(i % 2 === 0) ringAt(rad * Math.cos(a), rad * Math.sin(a), th + 0.15, 0.028, 0.0010, 0);
+    }
+    for(let i = 0; i < 4; i++){ const q = pol(rs * (1.1 + 0.6 * rnd()), rnd() * TAU); glint(q[0] * aspect, q[1], 0.25 + 0.5 * rnd(), 0.6 + 0.7 * rnd()); }
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * 0.35;
+  }
+  else if(fam === 18){                      // sunburst: short rays with a star at each tip
+    const n = 16, off = rnd() * TAU;
+    for(let i = 0; i < n; i++){
+      const a = off + i * TAU / n, len = (i % 2 ? 0.10 : 0.22) + 0.06 * rnd(), th = 0.05 + 0.5 * rnd();
+      put(6, 0, 0, th, a, 1.06, len, 0.0014);
+      dot((rs * 1.06 + len) * Math.cos(a), (rs * 1.06 + len) * Math.sin(a), th, i % 2 ? 0.004 : 0.007);
+    }
+    ringAt(0, 0, 0.1, rs * 1.04, 0.0016, 0); ringAt(0, 0, 0.3, rs * 1.24, 0.0010, 64);
+    lay[1] = (rnd() - 0.5) * 0.3;
+  }
+  else if(fam === 19){                      // nested triangles
+    const rot = rnd() * TAU;
+    for(let t3 = 0; t3 < 4; t3++){
+      const v = poly(3, rs * (1.18 + 0.24 * t3), rot + t3 * 0.35), th = 0.05 + 0.16 * t3;
+      for(let i = 0; i < 3; i++){ const a = v[i], b = v[(i + 1) % 3]; seg(a[0], a[1], b[0], b[1], th, t3 === 0 ? 0.0018 : 0.0011); dot(a[0], a[1], th, 0.006); }
+    }
+    ringAt(0, 0, 0.35, rs * 1.06, 0.0011, 0);
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * 0.25;
+  }
+  else if(fam === 20){                      // spirograph: petal curves of different counts laid over each other
+    const rot = rnd() * TAU;
+    rose(0, 0, 0.05, rs * 1.36, 5, rot); rose(0, 0, 0.12, rs * 1.52, 7, rot + 0.5, 0.0011); rose(0, 0, 0.25, rs * 1.20, 3, rot + 1.0); rose(0, 0, 0.4, rs * 1.62, 9, rot + 0.2, 0.0010);
+    ringAt(0, 0, 0.2, rs * 1.66, 0.0010, 0);
+    lay[1] = (rnd() > 0.5 ? 1 : -1) * 0.4;
+  }
+  else if(fam === 21){                      // the eye: an almond around the disc, an iris, lashes
+    const wd = rs * 1.60, d0 = wd * 0.85, Rr = Math.hypot(wd, d0), phi = Math.atan2(wd, d0);
+    arc(0, -d0, 0.05, Rr, 0.0018, Math.PI / 2 - phi, 2 * phi); arc(0, d0, 0.05, Rr, 0.0018, -Math.PI / 2 - phi, 2 * phi);
+    ringAt(0, 0, 0.1, rs * 1.07, 0.0016, 0); ringAt(0, 0, 0.3, rs * 1.16, 0.0010, 48);
+    for(let i = 0; i < 9; i++){ const a = Math.PI * (0.18 + 0.64 * i / 8); put(6, 0, 0, 0.15 + 0.5 * rnd(), a, 1.34 + 0.10 * Math.sin(a), 0.05 + 0.04 * rnd(), 0.0012); }
+    dot(-wd, 0, 0.1, 0.006); dot(wd, 0, 0.1, 0.006);
+  }
+  else if(fam === 22){                      // a field of stars thrown out from the disc
+    for(let i = 0; i < 28; i++){ const a = rnd() * TAU, r = rs * (1.03 + 0.75 * rnd() * rnd()); dot(r * Math.cos(a), r * Math.sin(a), 0.03 + 0.75 * rnd(), 0.0028 + 0.008 * rnd() * rnd()); }
+    for(let i = 0; i < 6; i++){ const q = pol(rs * (1.08 + 0.6 * rnd()), rnd() * TAU); glint(q[0] * aspect, q[1], 0.1 + 0.6 * rnd(), 0.6 + 1.0 * rnd()); }
+    ringAt(0, 0, 0.2, rs * 1.05, 0.0012, 0); ringAt(0, 0, 0.45, rs * 1.35, 0.0010, 80);
+  }
+  else if(fam === 23){                      // waves: rows of alternating arcs
+    const rows = [-0.42, -0.33, 0.33, 0.42], cnt = 6, wv = aspect / cnt;
+    for(let r3 = 0; r3 < rows.length; r3++) for(let i = 0; i < cnt; i++){
+      const x = -aspect / 2 + (i + 0.5) * wv, up = (i + r3) % 2 === 0;
+      arc(x, rows[r3], 0.05 + 0.12 * r3 + 0.04 * i, wv / 2, 0.0013, up ? 0 : Math.PI, Math.PI);
+    }
+    for(let i = 0; i < 10; i++) dot((rnd() - 0.5) * aspect * 0.95, (rnd() > 0.5 ? 1 : -1) * (0.26 + 0.2 * rnd()), TH(), 0.004);
   }
   return { el, lay, fam };
 }
@@ -4413,7 +4600,7 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHi
     "23":"Twinspin pairs with Disc \u2192 the record sits where the two galaxies meet. Swirl = how tightly the arms wind, Streak = arm sharpness, Warp = turbulence.",
     "24":"Depth 3D pairs with Artwork off \u2192 Warp = depth, Swirl = orbit, Streak = focus blur. Long songs \u2192 Full render.",
     "25":"Cymatics pairs with the music itself (the plate vibrates on the song) \u2192 Streak = line width, Scale = pattern complexity.",
-    "28":"Burst pairs with Disc or Artwork off \u2192 press Preview to hear it land. Seven compositions take turns, no two bursts in a row alike. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors of the artwork.",
+    "28":"Burst pairs with Disc or Artwork off \u2192 press Preview to hear it land. 24 compositions take turns in a shuffled deck, none repeats until all have played. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors of the artwork.",
     "29":"Eclipse pairs with Disc or Vinyl \u2192 the nebula wraps the record. Push Warp and Swirl to the top for the kaleidoscopic, iridescent version. Speed = orbit speed, Streak = filament sharpness, Scale = detail size.",
   };
 
@@ -4470,8 +4657,20 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHi
   const redraw = () => { if (!animId) draw(); };
   seg.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
-    TXT.style = b.dataset.ts;
-    seg.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    if (b.dataset.tz) {                                  // Size row
+      TXT.size = parseFloat(b.dataset.tz) || 1;
+      seg.querySelectorAll("button[data-tz]").forEach(x => x.classList.toggle("on", x === b));
+    } else {                                             // Off, Clean, Style A B C
+      TXT.style = b.dataset.ts;
+      seg.querySelectorAll("button[data-ts]").forEach(x => x.classList.toggle("on", x === b));
+    }
+    redraw();
+  });
+  const sizeSeg = document.getElementById("txtSize");
+  sizeSeg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    TXT.size = parseFloat(b.dataset.tz) || 1;
+    sizeSeg.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
     redraw();
   });
   [["txtTitle","title"],["txtSub","sub"],["txtTag","tag"]].forEach(([id, key]) => {
