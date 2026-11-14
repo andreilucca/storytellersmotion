@@ -715,6 +715,16 @@
         <button class="fx-btn on" data-v="record" title="The record on its own, centred">Record</button>
         <button class="fx-btn" data-v="sleeve" title="The artwork as the record cover, with the record pulled halfway out of it and spinning">Sleeve</button>
       </div>
+      <div class="setting-row" id="fxLabelRow" style="display:none; margin-top:10px">
+        <span class="setting-label" title="Optional: a different picture for the centre label of the record, for example the Side A artwork. Without it the label shows the main artwork.">Label image</span>
+        <div class="setting-control">
+          <label class="img-upload-mini" id="lblImgZone">
+            <input type="file" id="lblImgInput" accept="image/png,image/jpeg,image/jpg,image/webp">
+            <span id="lblImgLabel">Upload</span>
+          </label>
+          <button class="btn-clear-mini" id="lblImgClear" title="Remove the label image" style="display:none">&#x2715;</button>
+        </div>
+      </div>
       <div id="fxTextBlock" style="display:none">
         <div class="fx-lbl">Text on the video
           <span id="txtSize" title="Text size"><button data-tz="1" class="on">1x</button><button data-tz="1.5">1.5x</button><button data-tz="2">2x</button></span>
@@ -843,7 +853,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b26 · 2026-11-14 · test build: text size is one small control in the heading of the text block</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b27 · 2026-11-14 · test build: optional separate image for the label of the record</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2121,6 +2131,8 @@ uniform vec2  uArtRange;  // 5th and 95th percentile of the artwork luminance (a
 uniform vec4  uLay;       // Burst: rotation, spin and drift of the current layout
 uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
+uniform sampler2D uLabel; // optional separate picture for the record's centre label
+uniform float uHasLabel;  // 1 when that picture is set
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453123); }
 float noise(vec2 p){
@@ -2814,7 +2826,7 @@ vec3 vinylRecord(vec2 qc, float R, out float cov){
   vin += vec3(1.0)*smoothstep(0.0060, 0.0, abs(rn - 0.990))*(0.05 + 0.25*sheen);   // rim bevel
   // centre label: the artwork, turning with the record
   vec2 tuv = clamp(rq/LAB*0.5 + 0.5, 0.0, 1.0);
-  vec3 lab = texture2D(uTex, tuv).rgb;
+  vec3 lab = uHasLabel > 0.5 ? texture2D(uLabel, tuv).rgb : texture2D(uTex, tuv).rgb;
   lab *= 1.0 - 0.22*smoothstep(LAB*0.90, LAB, rn);              // the paper darkens toward its edge
   lab += vec3(1.0)*sheen*0.045;                                 // the label sits in the same light
   vec3 art = mix(vin, lab, smoothstep(LAB + 0.0035, LAB - 0.0035, rn));
@@ -3045,7 +3057,7 @@ const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
  "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
- "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift"]
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -3181,6 +3193,31 @@ function setArtwork(img){
   gl.generateMipmap(gl.TEXTURE_2D);
   applyPalette(extractPalette(img, 5));
   buildDepth(img);
+}
+
+// Optional separate picture for the record's centre label (Vinyl), for example the Side A artwork.
+// Without it the label shows the main artwork. Pass null to remove it.
+const labelTex = gl.createTexture();
+let hasLabel = false;
+function setLabel(img){
+  if(!img){ hasLabel = false; return; }
+  const size = 1024, c = document.createElement("canvas");
+  c.width = c.height = size;
+  const cx = c.getContext("2d");
+  cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high";
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, sc = Math.max(size/iw, size/ih);
+  cx.drawImage(img, (size-iw*sc)/2, (size-ih*sc)/2, iw*sc, ih*sc);       // centre crop to a square
+  gl.activeTexture(gl.TEXTURE3);
+  gl.bindTexture(gl.TEXTURE_2D, labelTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, c);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.activeTexture(gl.TEXTURE0);
+  hasLabel = true;
 }
 
 // ── palette: k-means extraction, editable, resettable ──
@@ -3335,6 +3372,7 @@ document.getElementById("fxArt").addEventListener("click", e=>{
   document.querySelectorAll("#fxArt button").forEach(x=>x.classList.toggle("on", x===b));
   document.getElementById("fxVinylOpt").style.display = st.art === "vinyl" ? "" : "none";   // Record / Sleeve belongs to Vinyl
   document.getElementById("fxTextBlock").style.display = st.art === "vinyl" ? "" : "none";  // and so does the text
+  document.getElementById("fxLabelRow").style.display = st.art === "vinyl" ? "" : "none";   // and the label image
   if(!animId) draw();
 });
 document.getElementById("fxVinylOpt").addEventListener("click", e=>{
@@ -3933,6 +3971,9 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1i(U.uTex, 0);
   gl.uniform1i(U.uPrev, 1);
   gl.uniform1i(U.uDepth, 2);
+  gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, labelTex);
+  gl.uniform1i(U.uLabel, 3); gl.uniform1f(U.uHasLabel, hasLabel ? 1 : 0);
+  gl.activeTexture(gl.TEXTURE0);
   gl.uniform2f(U.uRes, W, H);
   gl.uniform1f(U.uTime, t);
   gl.uniform1i(U.uMode, st.mode);
@@ -4552,7 +4593,7 @@ function exportTag(){
   const fx = c.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
   return fx ? art + "-" + fx : art;
 }
-return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHitMap, exportTag, mode: () => st.mode, art: () => st.art,
+return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHitMap, exportTag, setLabel, mode: () => st.mode, art: () => st.art,
          accent: () => {                                  // the most vivid tone of the artwork palette, as a CSS color
            let best = null, score = -1;
            for (const c of (currentPal || [])) {
@@ -4677,6 +4718,27 @@ return { canvas: glc, active, render, setArtwork, ensureAudio, liveExport, setHi
     document.getElementById(id).addEventListener("input", e => { TXT[key] = e.target.value; redraw(); });
   });
   try { document.fonts.load('700 30px "FuturaStd"').then(redraw); } catch (e) {}
+})();
+
+// ── Label image for the record (Vinyl) ──
+(function(){
+  const inp = document.getElementById("lblImgInput"), lab = document.getElementById("lblImgLabel"), clr = document.getElementById("lblImgClear");
+  inp.addEventListener("change", e => {
+    const file = e.target.files[0]; if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      FX.setLabel(img);
+      lab.textContent = file.name.length > 14 ? file.name.slice(0, 12) + "\u2026" : file.name;
+      clr.style.display = "";
+      URL.revokeObjectURL(img.src);
+      if (!animId) draw();
+    };
+    img.src = URL.createObjectURL(file);
+  });
+  clr.addEventListener("click", () => {
+    FX.setLabel(null); inp.value = ""; lab.textContent = "Upload"; clr.style.display = "none";
+    if (!animId) draw();
+  });
 })();
 </script>
 </body>
