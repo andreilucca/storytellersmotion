@@ -725,7 +725,7 @@
           <button class="btn-clear-mini" id="lblImgClear" title="Remove the label image" style="display:none">&#x2715;</button>
         </div>
       </div>
-      <div id="fxTextBlock" style="display:none">
+      <div id="fxTextBlock">
         <div class="fx-lbl">Text on the video
           <span id="txtSize" title="Text size"><button data-tz="1" class="on">1x</button><button data-tz="1.5">1.5x</button><button data-tz="2">2x</button></span>
         </div>
@@ -853,7 +853,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b27 · 2026-11-14 · test build: optional separate image for the label of the record</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b28 · 2026-11-14 · test build: text on every artwork mode · text entrance on full renders</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -1075,9 +1075,14 @@ function buildSprites() {
 // Drawn on the 2D canvas over every frame, in the preview and in each export
 // path, at the output resolution, so it is as sharp in the file as on screen.
 const TXT = { style: "off", title: "", sub: "", tag: "", size: 1 };
-function textOn(){                                       // text belongs to the Vinyl artwork mode
-  if (TXT.style === "off" || !(TXT.title.trim() || TXT.sub.trim() || TXT.tag.trim())) return false;
-  return !!(window.FX && FX.art && FX.art() === "vinyl");
+function textOn(){                                       // text works with every artwork mode
+  return TXT.style !== "off" && !!(TXT.title.trim() || TXT.sub.trim() || TXT.tag.trim());
+}
+// Entrance on a full render: the text fades in and settles during the first second.
+// Returns 0..1; looped exports and the preview show the text in place (1).
+function txtIntro(tSec){
+  const p = Math.max(0, Math.min(1, (tSec - 0.25) / 0.70));
+  return 1 - Math.pow(1 - p, 3);
 }
 function textShift(){ return textOn() ? 0.045 * Math.min(TXT.size, 2.2) : 0; }   // a larger text needs more room
 // Margins that keep the text clear of the Instagram interface. Published guides
@@ -1105,12 +1110,16 @@ function txtRound(c, x, y, w, h, r){
   c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath();
 }
 // progress: 0..1 along the clip, or null when it cannot be shown (looped exports)
-function drawTextOverlay(c, W, H, progress, tSec){
+function drawTextOverlay(c, W, H, progress, tSec, intro){
   if (!textOn()) return;
   const k = Math.min(W, H) / 1080 * TXT.size, sf = textSafe(W, H);        // Size multiplies everything: letters, card, spacing
   const title = TXT.title.trim().toUpperCase(), sub = TXT.sub.trim(), tag = TXT.tag.trim().toUpperCase();
   const maxW = W * (1 - 2 * sf.side), baseY = H * (1 - sf.bottom);
   c.save();
+  if (intro !== undefined && intro < 1) {                 // entrance: fade in and rise into place
+    c.globalAlpha = Math.max(0, intro);
+    c.translate(0, (1 - intro) * 26 * k);
+  }
   c.textBaseline = "alphabetic";
   if ("letterSpacing" in c) c.letterSpacing = "0px";
   if (TXT.style === "clean") {
@@ -3371,7 +3380,6 @@ document.getElementById("fxArt").addEventListener("click", e=>{
   st.art = b.dataset.a;
   document.querySelectorAll("#fxArt button").forEach(x=>x.classList.toggle("on", x===b));
   document.getElementById("fxVinylOpt").style.display = st.art === "vinyl" ? "" : "none";   // Record / Sleeve belongs to Vinyl
-  document.getElementById("fxTextBlock").style.display = st.art === "vinyl" ? "" : "none";  // and so does the text
   document.getElementById("fxLabelRow").style.display = st.art === "vinyl" ? "" : "none";   // and the label image
   if(!animId) draw();
 });
@@ -4276,7 +4284,7 @@ async function liveExport(){
           const sc = Math.max(W/iw, H/ih);
           cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
         }
-        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS);
+        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS, fastLoop ? 1 : txtIntro(outIdx / OUT_FPS));   // the entrance plays only when the file is not a loop
         const vf = new VideoFrame(comp, {
           timestamp: Math.round(outIdx * 1e6 / OUT_FPS),
           duration:  Math.round(1e6 / OUT_FPS)
@@ -4465,7 +4473,7 @@ async function liveExportRealtime(){
       const sc = Math.max(W/iw, H/ih);
       cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
     }
-    drawTextOverlay(cc, W, H, null, el);
+    drawTextOverlay(cc, W, H, null, el, fastLoop ? 1 : txtIntro(el));
     // mirror the live render into the preview canvas (every 3rd frame)
     frameN++;
     if(frameN % 3 === 0){
