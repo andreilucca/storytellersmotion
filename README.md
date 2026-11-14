@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b13 (2026-11-13)**
+**Current version: WEB v7.0-b27 (2026-11-14)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -21,9 +21,11 @@ no watermark, no account. Your files never leave your device.
     room, with the artwork as the spinning centre label. Two variants:
     **Record** (the record on its own) and **Sleeve** (the artwork as the
     cover, with the record pulled halfway out and spinning).
+    An optional **Label image** puts a different picture on the centre label,
+    for example the Side A artwork.
   - **Off**: no artwork layer, the background effect fills the whole frame.
-- **Effects engine (WebGL)**: 22 animated background effects (Melt, Vortex,
-  Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom, Spectrum, Warp,
+- **Effects engine (WebGL)**: 21 animated background effects (Melt, Vortex,
+  Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom, Spectrum,
   Reactor, VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
   Cymatics, Burst, Eclipse) with per-effect settings, palette editing, and
   forward and reverse direction. Colors come from the artwork.
@@ -31,9 +33,11 @@ no watermark, no account. Your files never leave your device.
   default look, including the finishing dials. Reset restores that look.
 - **Burst follows the music**: when the audio loads, the whole track is
   analysed once and the hits are mapped. Bursts land on those hits in the
-  preview and in the export. Seven compositions take turns (grid, rays, rings,
-  bars, diagonal, flash, mosaic), so two bursts in a row never look alike.
-  Speed sets how often it hits. Burst always exports as a full render.
+  preview and in the export. 24 compositions take turns in a shuffled deck
+  (grids, rays, rings, constellations, galaxies, flower of life, mandalas,
+  butterflies, mushrooms, orbits and more), and none repeats until all 24
+  have played. Speed sets how often it hits. Burst always exports as a full
+  render.
 - **Finishing dials**: Aberration, Glow, Grain and Vignette apply on top of
   any effect.
 - **Rotation**: 1 to 120 RPM (default 1), clockwise or counter-clockwise.
@@ -72,7 +76,7 @@ takes 60 seconds, so:
   one, so the export takes longer than at higher speeds.
 
 Effects marked **FULL** (Vortex, Ripple, Tunnel, Kaleido, Spectrum, Feedback,
-Twinspin, Depth 3D) rotate or evolve continuously and need Export render:
+Depth 3D) rotate or evolve continuously and need Export render:
 Full render on full songs. The app reminds you with a toast.
 
 ## How the export works
@@ -108,6 +112,8 @@ modest bitrates.
 
 ```
 index.html          the whole app (UI, WebGL engine, exporters)
+Start Storytellers Motion.bat      double-click launcher for Windows
+Start-StorytellersMotion.ps1       the local server the launcher runs
 vendor/ffmpeg/      vendored ffmpeg.wasm (works offline, no CDN)
 fonts/              embedded fonts
 ```
@@ -123,14 +129,22 @@ fonts/              embedded fonts
 ## Running it locally
 
 The app must be served over http. Opening `index.html` directly from disk
-(`file://`) shows the preview, but the export cannot start.
+(`file://`) shows the preview, but the export cannot load its engine and
+fails with "Failed to fetch".
+
+On Windows, double-click **Start Storytellers Motion.bat**. It starts a small
+local server (`Start-StorytellersMotion.ps1`, PowerShell only, no install, no
+administrator rights) and opens the app in the default browser. Keep the
+window open while you work; close it to stop.
+
+The folder must hold `index.html`, `vendor`, `fonts` and the two launcher
+files. Alternative, with Python installed:
 
 ```
 python -m http.server 8080
 ```
 
-Run it in the folder that holds `index.html`, `vendor` and `fonts`, then open
-http://localhost:8080.
+then open http://localhost:8080.
 
 ## Uploading to YouTube
 
@@ -138,7 +152,7 @@ The exported MP4 is always complete 1080p/60. What YouTube serves on **Auto**
 quality is decided per upload by its server-side adaptive bitrate (SABR),
 and heavy content matters:
 
-- Smooth effects (Bloom, Warp, Liquid...) are cheap to re-encode and usually
+- Smooth effects (Bloom, Liquid, Eclipse...) are cheap to re-encode and usually
   get HD on Auto right away.
 - Detail-dense effects (Depth 3D, VHS, Burst...) produce expensive 1080p
   renditions; a fresh upload can sit on Auto 360p even though 1080p60 is
@@ -154,7 +168,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b13 · 2026-11-13`.
+  `Storytellers Motion · WEB v7.0-b27 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
