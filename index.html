@@ -902,7 +902,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b38 · 2026-11-14 · test build: Clip length (Full song, 30 sec, 1 min) sits in Media, under the song</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b39 · 2026-11-14 · test build: with Sleeve the effect waits for the record to slide out, then fades in</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2198,6 +2198,7 @@ uniform vec4  uLay;       // Burst: rotation, spin and drift of the current layo
 uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
 uniform float uSlide;     // Sleeve: 0 = the record is inside the cover, 1 = pulled out
+uniform float uFxIn;      // 0 = plain background, 1 = the effect: lets the effect wait for the Sleeve entrance
 uniform sampler2D uLabel; // optional separate picture for the record's centre label
 uniform float uHasLabel;  // 1 when that picture is set
 
@@ -3004,6 +3005,7 @@ void main(){
   float t = uTime*uSpeed;
   vec2 FC = gl_FragCoord.xy - vec2(0.0, uShift*uRes.y);     // the picture moves up to make room for the text line
   vec3 col = background(vUv - vec2(0.0, uShift), t, aspect);
+  col = mix(uBgCol, col, uFxIn);                             // the effect fades in once the record is out of its sleeve
 
   if(uArt == 2){
     // ── Poster card: the square artwork centred on the frame, no rotation ──
@@ -3220,7 +3222,7 @@ const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
  "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
- "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide"]
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide","uFxIn"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -4044,6 +4046,13 @@ function fxBurstDemo(at, gap){
 let hitMap = null, hitSel = null, hitGap = -1, hitJob = 0;   // analysis of the loaded track, hits kept for the current rate
 let burstKey = "", burstExportT = null;                      // layout on the GPU, audio time forced by the exporter
 let slideExport = null;                                      // Sleeve entrance, set per frame by the exporter (null = record out)
+let fxInExport = null;                                       // how far the effect has faded in, set per frame by the exporter (null = fully on)
+// With Sleeve on a full render the effect stays hidden while the record slides out (done at 3.0 s),
+// then fades in over the next 1.2 s: 0 hidden, 1 fully on.
+function fxIntro(tSec){
+  const p = Math.max(0, Math.min(1, (tSec - 3.0) / 1.2));
+  return p*p*(3 - 2*p);
+}
 // The record leaves the cover during the first three seconds of a full render: 0 inside, 1 out.
 function sleeveIntro(tSec){
   const p = Math.max(0, Math.min(1, (tSec - 0.40) / 2.60));
@@ -4164,6 +4173,7 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1fv(U.uSpec, spec);
   gl.uniform1f(U.uShift, textShift());              // room for the text line, when text is on
   gl.uniform1f(U.uSlide, slideExport === null ? 1 : slideExport);   // the record is out, except during the exported entrance
+  gl.uniform1f(U.uFxIn, (fxInExport !== null && st.art === "vinyl" && st.sleeve) ? fxInExport : 1);   // with Sleeve the effect waits for the record
   gl.uniform1f(U.uRev, 60/Math.max(S.rpm, 1));     // seconds per disc revolution (Eclipse ties its orbits to it)
   if(st.mode === 28){
     const hb = burstNow(t);
@@ -4427,11 +4437,13 @@ async function liveExport(){
         offlineFreq = freqFrames ? freqFrames[Math.min(simIdx, freqFrames.length - 1)] : null;
         burstExportT = audioStart + t;             // Burst reads the hit map at this frame's exact audio time
         slideExport = fastLoop ? null : sleeveIntro(t);   // the entrance plays only when the file is not a loop
+        fxInExport  = fastLoop ? null : fxIntro(t);
         render(W, H, S.rotDir * t * effRpm * 6, t);
       }
       offlineFreq = null;
       burstExportT = null;
       slideExport = null;
+      fxInExport = null;
 
       if (fastLoop && f < xfadeFrames) headBmps[f] = await createImageBitmap(glc);
       if (!fastLoop || f >= xfadeFrames) {
@@ -5005,7 +5017,7 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     const a = artNow();
     if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin, Reactor or Burst, all built around a round record.";
     if (a === "card") return "Card \u2192 the artwork stands still, like a poster. Good behind it: Bloom, Liquid, Burn, Halftone, or Eclipse for a ring of light.";
-    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record; Full render adds the slide-out at the start.";
+    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. On Full render the record slides out, then the effect fades in.";
     if (a === "vinyl") return "Vinyl \u2192 black record, your artwork as its label. Cleanest with the effect Off and Clean text; Label image puts another picture on the label.";
     return "Artwork off \u2192 the effect is the whole picture. Depth 3D, Tunnel, Kaleido, Droste and Vortex show the artwork best this way.";
   }
