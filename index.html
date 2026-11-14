@@ -902,7 +902,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b41 · 2026-11-14 · test build: in the Sleeve opening the effect grows out of the record until it fills the frame</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b42 · 2026-11-14 · test build: in the Sleeve opening Tendril starts from nothing at the rim and grows until it fills the frame</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2200,6 +2200,8 @@ uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
 uniform float uSlide;     // Sleeve: 0 = the record is inside the cover, 1 = pulled out
 uniform float uFxIn;      // 0 = plain background, 1 = the effect everywhere; in between the effect grows outward from the record
+uniform float uFxSeq;     // 1 while a file with the Sleeve opening is rendered: the effect's own cycle starts when the effect appears
+uniform float uFxA0;      // the disc angle at the moment the effect appears (0 when uFxSeq is 0)
 uniform sampler2D uLabel; // optional separate picture for the record's centre label
 uniform float uHasLabel;  // 1 when that picture is set
 
@@ -2865,7 +2867,7 @@ vec3 background(vec2 uv, float t, float aspect){
     if(uArt == 4){ vec3 sg = sleeveGeo(); R = sg.x; q.x -= sg.z; }
     float r0 = length(q) + 1e-4;
     float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/26.0 + 0.5));   // whole growth cycles per disc turn; about 26 s each at the default Speed
-    float ph = uAngle*k*uDir;
+    float ph = (uAngle - uFxA0)*k*uDir - 1.5708*uFxSeq;        // in the Sleeve opening the cycle starts at its smallest point
     vec2 lp  = vec2(cos(ph), sin(ph))*0.35;
     float a0 = atan(q.y, q.x);
     vec2 av  = vec2(cos(a0), sin(a0));
@@ -2880,6 +2882,7 @@ vec3 background(vec2 uv, float t, float aspect){
     float t1 = pow(1.0 - abs(2.0*n1 - 1.0), sharp);            // stems
     float t2 = pow(1.0 - abs(2.0*n2 - 1.0), sharp*0.8)*0.6;    // finer branches
     float reach = 0.30 + 0.85*(0.5 + 0.5*sin(ph));             // how far they have grown
+    reach = mix(-0.30, reach, mix(1.0, uFxIn, uFxSeq));        // in the Sleeve opening they start from nothing at the rim
     float edge  = (n2 - 0.5)*0.5;
     float grown = smoothstep(reach + edge + 0.12, reach + edge - 0.25, lr);
     float tip   = smoothstep(0.30, 0.0, abs(lr - (reach + edge - 0.05)));
@@ -3235,7 +3238,7 @@ const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
  "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
- "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide","uFxIn"]
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide","uFxIn","uFxSeq","uFxA0"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -4059,11 +4062,13 @@ function fxBurstDemo(at, gap){
 let hitMap = null, hitSel = null, hitGap = -1, hitJob = 0;   // analysis of the loaded track, hits kept for the current rate
 let burstKey = "", burstExportT = null;                      // layout on the GPU, audio time forced by the exporter
 let slideExport = null;                                      // Sleeve entrance, set per frame by the exporter (null = record out)
+let fxA0Export = 0;                                          // disc angle (radians) at the moment the effect appears, set by the exporter
+const FX_START = 8.0;                                        // second at which the effect appears in the Sleeve opening
 let fxInExport = null;                                       // how far the effect has faded in, set per frame by the exporter (null = fully on)
 // fxIntro: 0 = plain background, 1 = the effect across the whole frame. From 8.0 s it grows out of
 // the record for 4 s, until it has covered the artwork and the frame.
 function fxIntro(tSec){
-  const p = Math.max(0, Math.min(1, (tSec - 8.0) / 4.0));
+  const p = Math.max(0, Math.min(1, (tSec - FX_START) / 4.0));
   return p*p*(3 - 2*p);
 }
 // Sleeve opening on a full render, one thing at a time:
@@ -4190,7 +4195,10 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1fv(U.uSpec, spec);
   gl.uniform1f(U.uShift, textShift());              // room for the text line, when text is on
   gl.uniform1f(U.uSlide, slideExport === null ? 1 : slideExport);   // the record is out, except during the exported entrance
-  gl.uniform1f(U.uFxIn, (fxInExport !== null && st.art === "vinyl" && st.sleeve) ? fxInExport : 1);   // with Sleeve the effect waits for the record
+  const fxSeq = fxInExport !== null && st.art === "vinyl" && st.sleeve;   // a file with the Sleeve opening is being rendered
+  gl.uniform1f(U.uFxIn, fxSeq ? fxInExport : 1);               // with Sleeve the effect waits for the record
+  gl.uniform1f(U.uFxSeq, fxSeq ? 1 : 0);
+  gl.uniform1f(U.uFxA0, fxSeq ? fxA0Export : 0);
   gl.uniform1f(U.uRev, 60/Math.max(S.rpm, 1));     // seconds per disc revolution (Eclipse ties its orbits to it)
   if(st.mode === 28){
     const hb = burstNow(t);
@@ -4455,6 +4463,7 @@ async function liveExport(){
         burstExportT = audioStart + t;             // Burst reads the hit map at this frame's exact audio time
         slideExport = fastLoop ? null : sleeveIntro(t);   // the entrance plays only when the file is not a loop
         fxInExport  = fastLoop ? null : fxIntro(t);
+        fxA0Export  = S.rotDir * FX_START * effRpm * 6 * Math.PI/180;   // where the disc is when the effect appears
         render(W, H, S.rotDir * t * effRpm * 6, t);
       }
       offlineFreq = null;
