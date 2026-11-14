@@ -409,6 +409,11 @@
   }
 </style>
 <style id="premiumPass">
+  /* The hint at the top right always stays on one line: it takes the room next to the logo,
+     its type shrinks a little when the sentence is long, and only then is it cut with an ellipsis. */
+  header { gap: 28px; }
+  .logo { flex-shrink: 0; }
+  .tagline { flex: 1 1 auto; min-width: 0; max-width: none; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
   /* ── Panel layout: tabs, effect thumbnails, Record always in view ── */
   .lay-tabs { display: none; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 6; background: var(--surface); flex-shrink: 0; }
   .lay-tabs button { all: unset; cursor: pointer; text-align: center; padding: 13px 0 11px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #777; border-bottom: 2px solid transparent; transition: color .15s; }
@@ -811,6 +816,8 @@
         <button class="fx-btn" data-m="25" title="Chladni plate: sand made of the artwork's colors settles on the nodal lines of a vibrating plate. The plate vibrates with the music, patterns morph continuously.">Cymatics</button>
         <button class="fx-btn" data-m="28" title="A dark field of frames, streaks and glints that explodes on the strongest hits of your track. The whole song is analysed when it loads, so the bursts land exactly on the music. Always exports as Full render.">Burst <span class="fx-badge">FULL</span></button>
         <button class="fx-btn" data-m="29" title="A living nebula wrapped around the record: filaments, dust lanes and stars, a hot core, drops that break away, a flare once per orbit. Loops exactly with every disc turn. Warp = how far the gas folds into itself (six mirrored sectors at the top), Swirl = cold light, then artwork colors, then iridescent, Streak = filament sharpness, Scale = detail size, Speed = orbit speed.">Eclipse</button>
+        <button class="fx-btn" data-m="30" title="Living filaments growing out of the rim of the disc, like mycelium or slow lightning: they grow out, glow at the front and draw back, while light travels along the stems. Loops exactly with every disc turn. Warp = how much they curl, Streak = how fine they are, Scale = density, Swirl = cold light, artwork colors, then iridescent.">Tendril</button>
+        <button class="fx-btn" data-m="31" title="Seven fine orbits around the disc, each tipped over at its own angle and turning against its neighbour, with a small planet and its trail on every one. Loops exactly with every disc turn. Warp = how far the orbits are tipped, Streak = trail length and line weight, Scale = spacing, Swirl = white lines, then artwork colors.">Orbits</button>
       </div>
       <div class="fx-grid2" id="fxDirs" style="margin-top:6px">
         <button class="fx-btn on" data-d="1">&#10227; Forward</button>
@@ -887,7 +894,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b34 · 2026-11-14 · test build: one layout, with tabs and effect thumbnails</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b36 · 2026-11-14 · test build: the hint line stays on one row</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2827,6 +2834,102 @@ vec3 background(vec2 uv, float t, float aspect){
     col += hot*exp(-abs(r0 - R)*70.0)*0.05;                                   // thin rim light all around the void
     col *= mix(0.25, 1.0, smoothstep(R*0.90, R*1.0, r0));                     // the void itself stays dark
   }
+  else if(uMode == 30){
+    // Tendril → living filaments growing out of the rim of the disc, like
+    // mycelium or slow lightning. The lines are the mid-level contours of
+    // warped noise laid out in a space that is tight around the disc and
+    // stretched on the way out, so they run mostly outward, fork and curl.
+    // They grow out, glow at the front, and draw back, while light travels
+    // along the stems. Everything follows the disc angle in whole-number
+    // multiples, so it loops exactly with every revolution.
+    vec2 q = (uv - 0.5)*vec2(aspect, 1.0)/min(aspect, 1.0);
+    float R  = (uArt == 2) ? uDiscR*1.46 : uDiscR;
+    if(uArt == 4){ vec3 sg = sleeveGeo(); R = sg.x; q.x -= sg.z; }
+    float r0 = length(q) + 1e-4;
+    float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/26.0 + 0.5));   // whole growth cycles per disc turn; about 26 s each at the default Speed
+    float ph = uAngle*k*uDir;
+    vec2 lp  = vec2(cos(ph), sin(ph))*0.35;
+    float a0 = atan(q.y, q.x);
+    vec2 av  = vec2(cos(a0), sin(a0));
+    float lr = log(r0/R);                                      // 0 at the rim, growing outward
+    float dens = 2.2*uScale;                                   // Scale = how dense the growth is
+    vec2 p = av*dens*1.6 + vec2(lr*1.1*dens, -lr*0.6*dens);
+    vec2 wv = vec2(fbm(p*0.9 + lp), fbm(p*0.9 + vec2(4.7, 2.3) - lp));
+    p += (wv - 0.5)*(0.6 + 2.2*w);                             // Warp = how much the tendrils curl
+    float n1 = fbm(p + lp*0.6);
+    float n2 = fbm(p*2.3 + vec2(7.1, 3.3) - lp*0.4);
+    float sharp = 6.0 + 26.0*uStreak;                          // Streak = how fine the tendrils are
+    float t1 = pow(1.0 - abs(2.0*n1 - 1.0), sharp);            // stems
+    float t2 = pow(1.0 - abs(2.0*n2 - 1.0), sharp*0.8)*0.6;    // finer branches
+    float reach = 0.30 + 0.85*(0.5 + 0.5*sin(ph));             // how far they have grown
+    float edge  = (n2 - 0.5)*0.5;
+    float grown = smoothstep(reach + edge + 0.12, reach + edge - 0.25, lr);
+    float tip   = smoothstep(0.30, 0.0, abs(lr - (reach + edge - 0.05)));
+    float outside = smoothstep(R*0.992, R*1.006, r0);
+    float body  = (t1 + t2*grown)*grown*outside;
+    float pulse = 0.55 + 0.45*sin(n1*40.0 - ph*3.0 + lr*6.0);  // light travelling along the stems
+    float halo  = pow(1.0 - abs(2.0*n1 - 1.0), 2.0)*grown*outside;
+    float ci = clamp(0.25 + 0.60*n2 + 0.50*lr, 0.0, 1.0);
+    vec3 pc = palette(ci); pc = pc/max(max(pc.r, max(pc.g, pc.b)), 0.25);
+    vec3 gc = mix(mix(vec3(0.45, 0.60, 0.95), vec3(0.85, 0.95, 1.0), ci), pc, smoothstep(0.0, 0.6, uSwirl));
+    vec3 acid = 0.5 + 0.5*cos(6.28318*(ci*1.4 + n1*0.8 + vec3(0.0, 0.33, 0.67)) + ph);
+    gc = mix(gc, acid, smoothstep(0.75, 1.0, uSwirl)*0.85);    // Swirl = cold light, then artwork colors, then iridescent
+    vec3 hot = mix(vec3(1.0), gc, 0.30);
+    vec3 ground = mix(uBgCol*0.08 + vec3(0.004), palette(0.0)*0.10 + vec3(0.003), smoothstep(0.0, 0.6, uSwirl));
+    col = ground + gc*halo*0.16 + gc*body*(0.55 + 0.75*pulse) + hot*body*tip*0.9 + hot*pow(body, 2.0)*0.5;
+    col += hot*exp(-abs(r0 - R)*60.0)*0.06;
+    col *= mix(0.25, 1.0, smoothstep(R*0.90, R*1.0, r0));
+  }
+  else if(uMode == 31){
+    // Orbits → seven fine orbits around the disc, each tipped over at its
+    // own angle and turning against its neighbour, so they read as rings in
+    // space: the near half of each is brighter than the far half. A small
+    // planet travels on every orbit and leaves a trail. Whole-number
+    // multiples of the disc angle throughout, so it loops exactly.
+    vec2 q = (uv - 0.5)*vec2(aspect, 1.0)/min(aspect, 1.0);
+    float R  = (uArt == 2) ? uDiscR*1.46 : uDiscR;
+    if(uArt == 4){ vec3 sg = sleeveGeo(); R = sg.x; q.x -= sg.z; }
+    float r0 = length(q);
+    float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/30.0 + 0.5));   // whole turns of the system per disc turn; about 30 s each at the default Speed
+    float ph = uAngle*k*uDir;
+    float tiltK = 0.25 + 0.70*clamp(w, 0.0, 1.2);              // Warp = how far the orbits are tipped over
+    float lineW = 0.0011 + 0.0016*uStreak;
+    vec3 acc = vec3(0.0);
+    for(int i = 0; i < 7; i++){
+      float fi = float(i);
+      float h1 = fract(fi*0.618 + 0.13), h2 = fract(fi*0.371 + 0.57);
+      float sgn = mod(fi, 2.0) < 0.5 ? 1.0 : -1.0;
+      float Ra = R*(1.06 + 0.085*fi*uScale);                    // Scale = spacing of the orbits
+      float tilt = tiltK*(0.35 + 0.65*h1)*(1.0 + 0.15*sin(ph*2.0 + fi*1.7));
+      float Rb = Ra*max(cos(tilt*1.5708), 0.12);
+      float phi = h2*6.28318 + ph*sgn;
+      float cp = cos(phi), sp = sin(phi);
+      vec2 e  = vec2(q.x*cp + q.y*sp, -q.x*sp + q.y*cp);        // into the orbit's own axes
+      vec2 en = e/vec2(Ra, Rb);
+      float f = length(en) - 1.0;
+      float g = length(en/vec2(Ra, Rb))/max(length(en), 1e-4);
+      float d = abs(f)/max(g, 1e-4);                            // distance to the orbit
+      float u = atan(en.y, en.x);                               // position along it
+      float front = 0.45 + 0.55*smoothstep(-0.3, 0.3, sin(u));
+      float line = smoothstep(lineW*1.8, lineW*0.4, d) + 0.25*exp(-d*140.0);
+      float up = sgn*ph*(2.0 + mod(fi, 3.0)) + h1*6.28318;      // where the planet is
+      float du = mod(sgn*(up - u), 6.28318);                    // how far behind the planet this point is
+      float trail = exp(-du*(5.0 - 3.5*uStreak))*smoothstep(lineW*5.0, lineW*0.5, d);   // Streak = trail length and line weight
+      float pd = length(e - vec2(Ra*cos(up), Rb*sin(up)));
+      float planet = smoothstep(0.012, 0.004, pd) + 0.5*exp(-pd*60.0);
+      vec3 oc = palette(fract(0.25 + fi*0.17)); oc = oc/max(max(oc.r, max(oc.g, oc.b)), 0.25);
+      oc = mix(vec3(0.85, 0.92, 1.0), oc, smoothstep(0.0, 0.6, uSwirl));   // Swirl = white lines, then artwork colors
+      acc += oc*(line*0.50*front + trail*1.3) + mix(vec3(1.0), oc, 0.3)*planet*1.6;
+    }
+    vec2 sgr = q*90.0, scl = floor(sgr); float shh = hash(scl);
+    vec2 spt = fract(sgr) - 0.5 - (vec2(hash(scl + 3.1), hash(scl + 7.7)) - 0.5)*0.6;
+    float star = step(0.92, shh)*smoothstep(0.10, 0.0, length(spt))*(0.5 + 0.5*sin(uAngle*floor(2.0 + shh*5.0) + shh*40.0));
+    vec3 ground = mix(uBgCol*0.08 + vec3(0.004), palette(0.0)*0.10 + vec3(0.003), smoothstep(0.0, 0.6, uSwirl));
+    float outside = smoothstep(R*0.992, R*1.006, r0);
+    col = ground + (acc + vec3(0.90, 0.95, 1.0)*star*0.5)*outside;
+    col += vec3(0.9, 0.95, 1.0)*exp(-abs(r0 - R)*60.0)*0.05;
+    col *= mix(0.25, 1.0, smoothstep(R*0.90, R*1.0, r0));
+  }
 
   col *= 1.0 + uBeatBg*0.25;   // the background breathes with the Beat dial
 
@@ -3347,6 +3450,8 @@ const MODE_DEFAULTS = {
   "24":{speed:0.6, warp:0.50, streak:0.40, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.1, grain:0, vig:0.25},
   "25":{speed:0.6, warp:0.30, streak:0.50, swirl:0.4, scale:1,   trail:0.20, ca:0, glow:0.3, grain:0, vig:0.1},
   "28":{speed:1.15,warp:0.60, streak:0.50, swirl:0.80,scale:1,   trail:0.55, ca:0.1, glow:0.25, grain:0, vig:0.1},
+  "30":{speed:0.6, warp:0.35, streak:0.50, swirl:0.70,scale:1,   trail:0, ca:0.05, glow:0.35, grain:0.05, vig:0.15},
+  "31":{speed:0.6, warp:0.30, streak:0.50, swirl:0.70,scale:1,   trail:0, ca:0, glow:0.30, grain:0, vig:0.15},
   "29":{speed:0.6, warp:0.50, streak:0.50, swirl:0.70,scale:1,   trail:0, ca:0, glow:0.25, grain:0.1, vig:0.15},
 };
 
@@ -4812,7 +4917,9 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     "23":"Twinspin pairs with Disc \u2192 the record sits where the two galaxies meet. Swirl = how tightly the arms wind, Streak = arm sharpness, Warp = turbulence.",
     "24":"Depth 3D pairs with Artwork off \u2192 Warp = depth, Swirl = orbit, Streak = focus blur. Long songs \u2192 Full render.",
     "25":"Cymatics pairs with the music itself (the plate vibrates on the song) \u2192 Streak = line width, Scale = pattern complexity.",
-    "28":"Burst pairs with Disc or Artwork off \u2192 press Preview to hear it land. 24 compositions take turns in a shuffled deck, none repeats until all have played. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors of the artwork.",
+    "28":"Burst follows the hits of your song \u2192 24 compositions in a shuffled deck, none repeats. Speed = how often it hits, Warp = power, Scale = density, Swirl = colors.",
+    "30":"Tendril pairs with Disc or Vinyl \u2192 the filaments grow out of the rim of the record. Warp = curl, Streak = how fine they are, Scale = density, Swirl = colors.",
+    "31":"Orbits pairs with Disc or Vinyl \u2192 the record sits at the centre of the system. Warp = tilt of the orbits, Streak = trail length, Scale = spacing.",
     "29":"Eclipse pairs with Disc or Vinyl \u2192 the nebula wraps the record. Push Warp and Swirl to the top for the kaleidoscopic, iridescent version. Speed = orbit speed, Streak = filament sharpness, Scale = detail size.",
   };
 
@@ -4943,6 +5050,21 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
   tabs.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setTab(b.dataset.t); });
   setTab(S.imageLoaded ? "effects" : "media");
   try { localStorage.removeItem("stm.layout"); localStorage.removeItem("stm.fold"); } catch (e) {}   // left over from the test builds with two looks
+})();
+
+// ── Hint line: one row only. A long sentence gets smaller type before it is ever cut. ──
+(function(){
+  const el = document.getElementById("fxHints"); if (!el) return;
+  const BASE = 12.8, MIN = 9.5;                       // px: the normal size and the smallest allowed
+  const fit = () => {
+    let px = BASE;
+    el.style.fontSize = px + "px";
+    while (el.scrollWidth > el.clientWidth + 1 && px > MIN) { px -= 0.4; el.style.fontSize = px.toFixed(1) + "px"; }
+    el.title = el.scrollWidth > el.clientWidth + 1 ? el.textContent : "";     // if it is still cut, the full text is in the tooltip
+  };
+  new MutationObserver(fit).observe(el, { childList: true, characterData: true, subtree: true });
+  window.addEventListener("resize", fit);
+  fit();
 })();
 </script>
 </body>
