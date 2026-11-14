@@ -409,6 +409,11 @@
   }
 </style>
 <style id="premiumPass">
+  .preset-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; margin: 2px 0 16px; }
+  .preset-row select { min-width: 0; padding: 0 0.55rem; height: 32px; background: #181818; border: 1px solid #2c2c2c; border-radius: 7px;
+                       color: var(--text); font-size: 0.72rem; font-family: inherit; outline: none; cursor: pointer; }
+  .preset-row select:focus { border-color: var(--accent); }
+  .preset-row .fx-btn { padding: 0 11px; min-height: 32px; height: 32px; font-size: 0.66rem; }
   /* Text size: one small joined control at the right end of the heading, values in a muted orange */
   #txtSize { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
   #txtSize button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
@@ -703,6 +708,12 @@
     <!-- Effects (WebGL engine) -->
     <div class="section">
       <div class="section-label">Effects</div>
+      <div class="preset-row">
+        <select id="presetSel" title="Saved looks, kept in this browser"><option value="">Presets</option></select>
+        <button class="fx-btn" id="presetSave" title="Save the current look under a name">Save</button>
+        <button class="fx-btn" id="presetDel" title="Delete the selected preset">&#x2715;</button>
+        <button class="fx-btn" id="presetRnd" title="Pick another effect and vary its settings">Random</button>
+      </div>
 
       <div class="fx-lbl" style="margin-top:0">Artwork</div>
       <div class="fx-grid2" id="fxArt" style="grid-template-columns:repeat(4,1fr)">
@@ -853,7 +864,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b30 · 2026-11-14 · test build: the record leaves the sleeve more slowly</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b31 · 2026-11-14 · test build: presets saved in the browser · Random</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -4599,6 +4610,82 @@ async function liveExportRealtime(){
     resetRecUI();
   }
 }
+
+
+// ── Presets and Random ──
+// A preset is the whole look: artwork mode, effect, direction and its ten dials, plus disc speed,
+// rotation, photo size, background color and the text style. Presets are kept in this browser.
+const PRESET_KEY = "stm.presets";
+function lookGet(){
+  const o = { mode: st.mode, dir: st.dir, art: st.art, sleeve: !!st.sleeve };
+  for(const k in SLIDERS) o[k] = st[k];
+  o.rpm = S.rpm; o.rotDir = S.rotDir; o.size = Math.round(S.vinylPct*100); o.bg = S.bgColor;
+  o.txtStyle = TXT.style; o.txtSize = TXT.size;
+  return o;
+}
+function clickIf(sel){ const b = document.querySelector(sel); if(b) b.click(); return !!b; }
+function lookSet(o){
+  if(!o) return;
+  if(o.art) clickIf('#fxArt [data-a="' + o.art + '"]');
+  if(o.art === "vinyl") clickIf('#fxVinylOpt [data-v="' + (o.sleeve ? "sleeve" : "record") + '"]');
+  if(typeof o.mode === "number") clickIf('#fxModes .fx-btn[data-m="' + o.mode + '"]');     // the effect loads its own look first
+  if(o.dir) clickIf('#fxDirs [data-d="' + o.dir + '"]');
+  for(const k in SLIDERS) if(typeof o[k] === "number"){ st[k] = o[k]; syncSlider(k, o[k]); }   // then the saved dials replace it
+  const setRange = (id, v) => { const e = document.getElementById(id); if(e && v !== undefined){ e.value = v; e.dispatchEvent(new Event("input")); } };
+  setRange("rpmSlider", o.rpm); setRange("sizeSlider", o.size);
+  if(o.rotDir) clickIf('#rotControl [data-rot="' + o.rotDir + '"]');
+  if(o.bg && /^#[0-9a-f]{6}$/i.test(o.bg)){ const e = document.getElementById("bgColor"); e.value = o.bg; e.dispatchEvent(new Event("input")); e.dispatchEvent(new Event("change")); }
+  if(o.txtStyle) clickIf('#txtStyle [data-ts="' + o.txtStyle + '"]');
+  if(o.txtSize) clickIf('#txtSize [data-tz="' + o.txtSize + '"]');
+  if(!animId) draw();
+}
+// Random: another effect than the current one, with its main dials varied between 70% and 130% of its own look.
+function lookRandom(){
+  const btns = Array.from(document.querySelectorAll('#fxModes .fx-btn')).filter(b => parseInt(b.dataset.m, 10) >= 0 && !b.classList.contains("dis"));
+  if(!btns.length) return;
+  let pick;
+  do { pick = btns[Math.floor(Math.random()*btns.length)]; } while(btns.length > 1 && parseInt(pick.dataset.m, 10) === st.mode);
+  pick.click();
+  for(const k of ["speed","warp","streak","swirl","scale"]){
+    const el = document.getElementById(SLIDERS[k][0]), mn = parseFloat(el.min), mx = parseFloat(el.max), stp = parseFloat(el.step) || 0.05;
+    let v = st[k]*(0.7 + 0.6*Math.random());
+    v = parseFloat(Math.max(mn, Math.min(mx, Math.round(v/stp)*stp)).toFixed(3));
+    st[k] = v; syncSlider(k, v);
+  }
+  clickIf('#fxDirs [data-d="' + (Math.random() < 0.3 ? -1 : 1) + '"]');
+  if(!animId) draw();
+}
+function presetsLoad(){ try { const a = JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+function presetsStore(a){ try { localStorage.setItem(PRESET_KEY, JSON.stringify(a)); return true; } catch(e){ return false; } }
+(function(){
+  const sel = document.getElementById("presetSel");
+  const fill = (chosen) => {
+    const list = presetsLoad();
+    sel.innerHTML = "";
+    const first = document.createElement("option"); first.value = ""; first.textContent = list.length ? "Presets (" + list.length + ")" : "Presets"; sel.appendChild(first);
+    list.forEach(p => { const o = document.createElement("option"); o.value = p.name; o.textContent = p.name; sel.appendChild(o); });
+    sel.value = chosen && list.some(p => p.name === chosen) ? chosen : "";
+  };
+  fill();
+  sel.addEventListener("change", () => {
+    const p = presetsLoad().find(x => x.name === sel.value);
+    if(p) lookSet(p.data);
+  });
+  document.getElementById("presetSave").addEventListener("click", () => {
+    const list = presetsLoad();
+    const name = (window.prompt("Name for this preset", sel.value || ("Look " + (list.length + 1))) || "").trim().slice(0, 40);
+    if(!name) return;
+    const i = list.findIndex(x => x.name === name), item = { name, data: lookGet() };
+    if(i >= 0) list[i] = item; else list.push(item);
+    if(presetsStore(list)){ fill(name); showToast("Preset saved: " + name); } else showToast("The preset could not be saved in this browser.");
+  });
+  document.getElementById("presetDel").addEventListener("click", () => {
+    if(!sel.value) return;
+    const name = sel.value, list = presetsLoad().filter(x => x.name !== name);
+    if(presetsStore(list)){ fill(); showToast("Preset deleted: " + name); }
+  });
+  document.getElementById("presetRnd").addEventListener("click", lookRandom);
+})();
 
 // Short tag for the exported file name: artwork mode, then the effect when one is on.
 function exportTag(){
