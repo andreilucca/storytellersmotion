@@ -853,7 +853,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b28 · 2026-11-14 · test build: text on every artwork mode · text entrance on full renders</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b30 · 2026-11-14 · test build: the record leaves the sleeve more slowly</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2140,6 +2140,7 @@ uniform vec2  uArtRange;  // 5th and 95th percentile of the artwork luminance (a
 uniform vec4  uLay;       // Burst: rotation, spin and drift of the current layout
 uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
+uniform float uSlide;     // Sleeve: 0 = the record is inside the cover, 1 = pulled out
 uniform sampler2D uLabel; // optional separate picture for the record's centre label
 uniform float uHasLabel;  // 1 when that picture is set
 
@@ -2187,7 +2188,7 @@ float specAt(float x){
 vec3 sleeveGeo(){
   float a = uRes.x/uRes.y, hx = 0.5*a/min(a, 1.0), hy = 0.5/min(a, 1.0);
   float Rr = (uDiscR/0.43)*min(2.0*hx*0.86/3.48, 2.0*hy*0.72/2.08);
-  return vec3(Rr, -0.70*Rr, 0.74*Rr);
+  return vec3(Rr, -0.70*Rr, mix(-0.67*Rr, 0.74*Rr, uSlide));   // the record slides from inside the cover to its place
 }
 
 // frame uv → artwork uv with the artwork covering the frame (centre crop, never stretched)
@@ -3066,7 +3067,7 @@ const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
  "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
- "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel"]
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -3887,6 +3888,12 @@ function fxBurstDemo(at, gap){
 // BURST-END
 let hitMap = null, hitSel = null, hitGap = -1, hitJob = 0;   // analysis of the loaded track, hits kept for the current rate
 let burstKey = "", burstExportT = null;                      // layout on the GPU, audio time forced by the exporter
+let slideExport = null;                                      // Sleeve entrance, set per frame by the exporter (null = record out)
+// The record leaves the cover during the first three seconds of a full render: 0 inside, 1 out.
+function sleeveIntro(tSec){
+  const p = Math.max(0, Math.min(1, (tSec - 0.40) / 2.60));
+  return p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3)/2;
+}
 // Analyse the decoded track once, right after it loads (off the click handler so the UI stays responsive).
 function setHitMap(buf){
   hitMap = null; hitSel = null; hitGap = -1;
@@ -4001,6 +4008,7 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1f(U.uBeatBg, beatBg);
   gl.uniform1fv(U.uSpec, spec);
   gl.uniform1f(U.uShift, textShift());              // room for the text line, when text is on
+  gl.uniform1f(U.uSlide, slideExport === null ? 1 : slideExport);   // the record is out, except during the exported entrance
   gl.uniform1f(U.uRev, 60/Math.max(S.rpm, 1));     // seconds per disc revolution (Eclipse ties its orbits to it)
   if(st.mode === 28){
     const hb = burstNow(t);
@@ -4263,10 +4271,12 @@ async function liveExport(){
         const t = simIdx / SIM_FPS;
         offlineFreq = freqFrames ? freqFrames[Math.min(simIdx, freqFrames.length - 1)] : null;
         burstExportT = audioStart + t;             // Burst reads the hit map at this frame's exact audio time
+        slideExport = fastLoop ? null : sleeveIntro(t);   // the entrance plays only when the file is not a loop
         render(W, H, S.rotDir * t * effRpm * 6, t);
       }
       offlineFreq = null;
       burstExportT = null;
+      slideExport = null;
 
       if (fastLoop && f < xfadeFrames) headBmps[f] = await createImageBitmap(glc);
       if (!fastLoop || f >= xfadeFrames) {
