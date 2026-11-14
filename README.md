@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b31 (2026-11-14)**
+**Current version: WEB v7.0-b34 (2026-11-14)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -38,6 +38,8 @@ no watermark, no account. Your files never leave your device.
   butterflies, mushrooms, orbits and more), and none repeats until all 24
   have played. Speed sets how often it hits. Burst always exports as a full
   render.
+- **Tabbed panel**: four tabs (Media, Setup, Artwork, Effects), a thumbnail
+  of every effect rendered from your artwork, and Record always in view.
 - **Presets and Random**: Save keeps the whole look under a name (artwork
   mode, effect and its dials, disc speed and direction, photo size,
   background color, text style). Presets live in your own browser. Random
@@ -172,7 +174,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b31 · 2026-11-14`.
+  `Storytellers Motion · WEB v7.0-b34 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
