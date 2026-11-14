@@ -449,12 +449,12 @@
   .preset-row select:focus { border-color: var(--accent); }
   .preset-row .fx-btn { padding: 0 11px; min-height: 32px; height: 32px; font-size: 0.66rem; }
   /* Text size: one small joined control at the right end of the heading, values in a muted orange */
-  #txtSize, #thermalSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
-  #txtSize button, #thermalSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
+  #txtSize, #thermalSw, #txtIntroSw, #sleeveIntroSw, #fxIntroSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
+  #txtSize button, #thermalSw button, #txtIntroSw button, #sleeveIntroSw button, #fxIntroSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
                     text-transform: none; color: #a87840; border-left: 1px solid #33291d; transition: color .15s, background .15s; }
-  #txtSize button:first-child, #thermalSw button:first-child { border-left: none; }
-  #txtSize button:hover, #thermalSw button:hover { color: #cf9450; }
-  #txtSize button.on, #thermalSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
+  #txtSize button:first-child, #thermalSw button:first-child, #txtIntroSw button:first-child, #sleeveIntroSw button:first-child, #fxIntroSw button:first-child { border-left: none; }
+  #txtSize button:hover, #thermalSw button:hover, #txtIntroSw button:hover, #sleeveIntroSw button:hover, #fxIntroSw button:hover { color: #cf9450; }
+  #txtSize button.on, #thermalSw button.on, #txtIntroSw button.on, #sleeveIntroSw button.on, #fxIntroSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
   .txt-models { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
   .txt-models span { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6f6f; padding-right: 4px; }
   .txt-models .fx-btn { padding: 6px 2px; min-height: 28px; font-size: 0.68rem; }
@@ -762,6 +762,13 @@
         <button class="fx-btn on" data-v="record" title="The record on its own, centred">Record</button>
         <button class="fx-btn" data-v="sleeve" title="The artwork as the record cover, with the record pulled halfway out of it and spinning">Sleeve</button>
       </div>
+      <div class="fx-lbl" id="sleeveIntroRow" style="display:none; margin-top:10px" title="On Full render the record slides out of the cover, then the text appears, then the effect grows from the record. Off: everything is in place from the first frame.">Sleeve opening
+        <span id="sleeveIntroSw" title="Sleeve opening on or off"><button data-si="0">Off</button><button data-si="1" class="on">On</button></span>
+      </div>
+      <div class="fx-lbl" id="fxIntroRow" style="margin-top:10px" title="On Full render the effect starts after one second and grows out of the record or the card, then the text appears. Off: the effect is on from the first frame.">Effect opening
+        <span id="fxIntroSw" title="Effect opening on or off"><button data-fi="0">Off</button><button data-fi="1" class="on">On</button></span>
+      </div>
+      <button class="fx-btn" id="btnPlayOpen" style="width:100%; margin-top:8px" title="Plays the start of the video in the preview, exactly as Full render exports it: the record, the text and the effect coming in. It also plays when you flip one of the opening switches.">&#9654; Play opening</button>
       <div class="setting-row" id="fxLabelRow" style="display:none; margin-top:10px">
         <span class="setting-label" title="Optional: a different picture for the centre label of the record, for example the Side A artwork. Without it the label shows the main artwork.">Label image</span>
         <div class="setting-control">
@@ -791,6 +798,9 @@
         <input class="txt-in" id="txtTitle" type="text" maxlength="70" placeholder="Title: Artist &middot; Track" autocomplete="off">
         <input class="txt-in" id="txtSub" type="text" maxlength="70" placeholder="Second line: label, catalogue, date" autocomplete="off">
         <input class="txt-in" id="txtTag" type="text" maxlength="16" placeholder="Tag: A2, OUT NOW, PREMIERE" autocomplete="off">
+        <div class="fx-lbl" style="margin-top:10px" title="On Full render the text fades in over two seconds. Off: the text is in place from the first frame.">Text entrance
+          <span id="txtIntroSw" title="Text entrance on or off"><button data-ti="0">Off</button><button data-ti="1" class="on">On</button></span>
+        </div>
       </div>
 
 
@@ -907,7 +917,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b45 · 2026-11-14 · test build: in the Sleeve opening Orbits unfold from the record one by one and Eclipse grows from the rim</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b48 · 2026-11-14 · test build: Play opening shows the openings in the preview (Artwork tab), also when a switch is flipped</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -1128,15 +1138,15 @@ function buildSprites() {
 // ── TEXT OVERLAY ──────────────────────────────────────────────────────────
 // Drawn on the 2D canvas over every frame, in the preview and in each export
 // path, at the output resolution, so it is as sharp in the file as on screen.
-const TXT = { style: "off", title: "", sub: "", tag: "", size: 1 };
+const TXT = { style: "off", title: "", sub: "", tag: "", size: 1, intro: true };   // intro: the text fades in on a full render
 function textOn(){                                       // text works with every artwork mode
   return TXT.style !== "off" && !!(TXT.title.trim() || TXT.sub.trim() || TXT.tag.trim());
 }
-// Entrance on a full render: the text fades in slowly and settles, over about two seconds.
-// With Sleeve it waits until the record has left the cover (5.0 s); otherwise it starts at 1.0 s.
+// Entrance on a full render: the text fades in slowly and settles, over about two seconds, from
+// the second given by the opening plan (1.0 s on its own, later when it waits for an opening).
 // Returns 0..1; looped exports and the preview show the text in place (1).
-function txtIntro(tSec, afterSleeve){
-  const p = Math.max(0, Math.min(1, (tSec - (afterSleeve ? 5.0 : 1.0)) / 2.2));
+function txtIntro(tSec, startSec){
+  const p = Math.max(0, Math.min(1, (tSec - startSec) / 2.2));
   return p*p*p*(p*(6*p - 15) + 10);                    // very soft start and stop
 }
 function textShift(){ return textOn() ? 0.045 * Math.min(TXT.size, 2.2) : 0; }   // a larger text needs more room
@@ -1294,7 +1304,8 @@ function draw(targetCtx, W, H) {
     const sc = Math.max(W / iw, H / ih);
     targetCtx.drawImage(S.fgImage, (W - iw * sc) / 2, (H - ih * sc) / 2, iw * sc, ih * sc);
   }
-  drawTextOverlay(targetCtx, W, H, null, performance.now() / 1000);
+  const op = (window.FX && FX.opening) ? FX.opening() : null;         // set while a played opening runs in the preview
+  drawTextOverlay(targetCtx, W, H, null, op ? op.t : performance.now() / 1000, (op && TXT.intro) ? txtIntro(op.t, op.txtStart) : undefined);
 }
 
 // Parametric draw used by the in-browser exporter. Independent of the preview
@@ -3032,7 +3043,7 @@ void main(){
     // which starts under the rim and widens until it has covered the whole frame.
     vec2 qg = (FC - 0.5*uRes)/min(uRes.x, uRes.y);
     vec2 hf = 0.5*uRes/min(uRes.x, uRes.y);
-    float R0 = (uArt == 2) ? uDiscR*1.46 : uDiscR, cx = 0.0;
+    float R0 = uDiscR, cx = 0.0;                             // a card starts from the circle inside it, so nothing shows past its edges at first
     if(uArt == 4){ vec3 sg = sleeveGeo(); cx = sg.z; R0 = sg.x; }
     qg.x -= cx;
     float far  = length(vec2(hf.x + abs(cx), hf.y));         // from the record's centre to the farthest corner
@@ -3478,7 +3489,7 @@ function applyPalette(pal, keepBase){
 }
 
 // ── state + per-effect slider defaults ──
-const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal:false, thermalAmt:1, ca:0, glow:0, grain:0, vig:0,
+const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal:false, thermalAmt:1, introSleeve:true, introFx:true, ca:0, glow:0, grain:0, vig:0,
             speed:1, warp:0.35, streak:0.65, swirl:0.5, scale:1, trail:0, beat:0};
 const MODE_DEFAULTS = {
   "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
@@ -4082,12 +4093,43 @@ let burstKey = "", burstExportT = null;                      // layout on the GP
 let slideExport = null;                                      // Sleeve entrance, set per frame by the exporter (null = record out)
 let fxAgeExport = 1e4;                                       // seconds since the effect appeared, set per frame by the exporter
 let fxA0Export = 0;                                          // disc angle (radians) at the moment the effect appears, set by the exporter
-const FX_START = 8.0;                                        // second at which the effect appears in the Sleeve opening
+// What plays at the start of a file, one thing at a time. Looped files and previews play nothing.
+//   Sleeve opening:  record out 0.5 to 4.5 s, text from 5.0 s, effect from 8.0 s
+//   Effect opening (Disc, Card, Vinyl Record):  effect from 1.0 s, text from 3.5 s
+//   neither:  effect on from the first frame, text from 1.0 s
+function openingPlan(fastLoop){
+  const sleeve = !fastLoop && st.art === "vinyl" && st.sleeve && st.introSleeve;
+  const disc   = !fastLoop && st.introFx && st.mode >= 0 && (st.art === "disc" || st.art === "card" || (st.art === "vinyl" && !st.sleeve));
+  return { sleeve, fx: sleeve || disc, fxStart: sleeve ? 8.0 : 1.0, txtStart: sleeve ? 5.0 : disc ? 3.5 : 1.0 };
+}
 let fxInExport = null;                                       // how far the effect has faded in, set per frame by the exporter (null = fully on)
-// fxIntro: 0 = plain background, 1 = the effect across the whole frame. From 8.0 s it grows out of
-// the record for 4 s, until it has covered the artwork and the frame.
-function fxIntro(tSec){
-  const p = Math.max(0, Math.min(1, (tSec - FX_START) / 4.0));
+// fxIntro: 0 = plain background, 1 = the effect across the whole frame. From its start second it grows
+// out of the record for 4 s, until it has covered the artwork and the frame.
+// Opening preview: after "Play opening" the preview runs on the clock of a full render, from the
+// same plan as the export, so the record, the text and the effect come in exactly as in the file.
+let openT0 = null;                                           // performance.now() at the press (null = the usual preview)
+function openingNow(){
+  if(openT0 === null) return null;
+  if(S.isRecording || st.renderMode !== "full"){ openT0 = null; return null; }   // openings exist only on Full render
+  return { t: (performance.now() - openT0)/1000, plan: openingPlan(false) };
+}
+function playOpening(){
+  if(st.renderMode !== "full"){ openT0 = null; return false; }
+  openT0 = performance.now();
+  return true;
+}
+function previewRender(W, H, angleDeg){
+  const op = openingNow();
+  if(!op) return render(W, H, angleDeg);
+  slideExport = op.plan.sleeve ? sleeveIntro(op.t) : null;
+  fxInExport  = op.plan.fx ? fxIntro(op.t, op.plan.fxStart) : null;
+  fxA0Export  = S.rotDir * op.plan.fxStart * S.rpm * 6 * Math.PI/180;
+  fxAgeExport = op.t - op.plan.fxStart;
+  try { render(W, H, S.rotDir * op.t * S.rpm * 6, op.t); }
+  finally { slideExport = null; fxInExport = null; fxAgeExport = 1e4; }
+}
+function fxIntro(tSec, startSec){
+  const p = Math.max(0, Math.min(1, (tSec - startSec) / 4.0));
   return p*p*(3 - 2*p);
 }
 // Sleeve opening on a full render, one thing at a time:
@@ -4214,7 +4256,7 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1fv(U.uSpec, spec);
   gl.uniform1f(U.uShift, textShift());              // room for the text line, when text is on
   gl.uniform1f(U.uSlide, slideExport === null ? 1 : slideExport);   // the record is out, except during the exported entrance
-  const fxSeq = fxInExport !== null && st.art === "vinyl" && st.sleeve;   // a file with the Sleeve opening is being rendered
+  const fxSeq = fxInExport !== null;                           // a file with an opening is being rendered (the exporter decides)
   gl.uniform1f(U.uFxIn, fxSeq ? fxInExport : 1);               // with Sleeve the effect waits for the record
   gl.uniform1f(U.uFxSeq, fxSeq ? 1 : 0);
   gl.uniform1f(U.uThermal, (st.thermal && st.mode >= 0 && st.mode !== 16) ? st.thermalAmt : 0);   // not with Feedback, which is built from its own previous frame
@@ -4482,10 +4524,11 @@ async function liveExport(){
         const t = simIdx / SIM_FPS;
         offlineFreq = freqFrames ? freqFrames[Math.min(simIdx, freqFrames.length - 1)] : null;
         burstExportT = audioStart + t;             // Burst reads the hit map at this frame's exact audio time
-        slideExport = fastLoop ? null : sleeveIntro(t);   // the entrance plays only when the file is not a loop
-        fxInExport  = fastLoop ? null : fxIntro(t);
-        fxA0Export  = S.rotDir * FX_START * effRpm * 6 * Math.PI/180;   // where the disc is when the effect appears
-        fxAgeExport = t - FX_START;
+        const plan = openingPlan(fastLoop);               // openings play only when the file is not a loop and their switch is on
+        slideExport = plan.sleeve ? sleeveIntro(t) : null;
+        fxInExport  = plan.fx ? fxIntro(t, plan.fxStart) : null;
+        fxA0Export  = S.rotDir * plan.fxStart * effRpm * 6 * Math.PI/180;   // where the disc is when the effect appears
+        fxAgeExport = t - plan.fxStart;
         render(W, H, S.rotDir * t * effRpm * 6, t);
       }
       offlineFreq = null;
@@ -4509,7 +4552,7 @@ async function liveExport(){
           const sc = Math.max(W/iw, H/ih);
           cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
         }
-        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS, fastLoop ? 1 : txtIntro(outIdx / OUT_FPS, st.art === "vinyl" && st.sleeve));   // the entrance plays only when the file is not a loop
+        drawTextOverlay(cc, W, H, null, outIdx / OUT_FPS, (fastLoop || !TXT.intro) ? 1 : txtIntro(outIdx / OUT_FPS, openingPlan(fastLoop).txtStart));   // the entrance plays only when the file is not a loop
         const vf = new VideoFrame(comp, {
           timestamp: Math.round(outIdx * 1e6 / OUT_FPS),
           duration:  Math.round(1e6 / OUT_FPS)
@@ -4698,7 +4741,7 @@ async function liveExportRealtime(){
       const sc = Math.max(W/iw, H/ih);
       cc.drawImage(S.fgImage, (W-iw*sc)/2, (H-ih*sc)/2, iw*sc, ih*sc);
     }
-    drawTextOverlay(cc, W, H, null, el, fastLoop ? 1 : txtIntro(el, false));
+    drawTextOverlay(cc, W, H, null, el, (fastLoop || !TXT.intro) ? 1 : txtIntro(el, 1.0));
     // mirror the live render into the preview canvas (every 3rd frame)
     frameN++;
     if(frameN % 3 === 0){
@@ -4869,6 +4912,21 @@ document.getElementById("thermalSw").addEventListener("click", e => { const b = 
 document.getElementById("fxThermal").addEventListener("input", e => { st.thermalAmt = parseFloat(e.target.value); thermalSync(); });
 document.getElementById("fxModes").addEventListener("click", e => { if(e.target.closest("button")) setTimeout(thermalSync, 0); });   // the label follows the effect: n/a with Feedback
 
+// ── Entrances: small switches for the text entrance and the Sleeve opening ──
+function introSync(){
+  document.querySelectorAll("#txtIntroSw button").forEach(b => b.classList.toggle("on", (b.dataset.ti === "1") === TXT.intro));
+  document.querySelectorAll("#sleeveIntroSw button").forEach(b => b.classList.toggle("on", (b.dataset.si === "1") === st.introSleeve));
+  document.getElementById("sleeveIntroRow").style.display = (st.art === "vinyl" && st.sleeve) ? "" : "none";   // belongs to Sleeve
+  document.querySelectorAll("#fxIntroSw button").forEach(b => b.classList.toggle("on", (b.dataset.fi === "1") === st.introFx));
+  document.getElementById("fxIntroRow").style.display = (st.art === "disc" || st.art === "card" || (st.art === "vinyl" && !st.sleeve)) ? "" : "none";   // Disc, Card, Vinyl Record
+}
+document.getElementById("fxIntroSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; st.introFx = b.dataset.fi === "1"; introSync(); playOpening(); });
+document.getElementById("btnPlayOpen").addEventListener("click", () => { playOpening(); });
+document.getElementById("txtIntroSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; TXT.intro = b.dataset.ti === "1"; introSync(); playOpening(); });
+document.getElementById("sleeveIntroSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; st.introSleeve = b.dataset.si === "1"; introSync(); playOpening(); });
+document.getElementById("fxArt").addEventListener("click", () => setTimeout(introSync, 0));
+document.getElementById("fxVinylOpt").addEventListener("click", () => setTimeout(introSync, 0));
+
 // ── Presets and Random ──
 // A preset is the whole look: artwork mode, effect, direction and its ten dials, plus disc speed,
 // rotation, photo size, background color and the text style. Presets are kept in this browser.
@@ -4879,6 +4937,7 @@ function lookGet(){
   o.rpm = S.rpm; o.rotDir = S.rotDir; o.size = Math.round(S.vinylPct*100); o.bg = S.bgColor;
   o.txtStyle = TXT.style; o.txtSize = TXT.size;
   o.thermal = st.thermal ? st.thermalAmt : 0;
+  o.introText = TXT.intro; o.introSleeve = st.introSleeve; o.introFx = st.introFx;
   return o;
 }
 function clickIf(sel){ const b = document.querySelector(sel); if(b) b.click(); return !!b; }
@@ -4898,6 +4957,8 @@ function lookSet(o){
   const th = typeof o.thermal === "number" ? o.thermal : 0;      // looks saved before Thermal existed have it off
   st.thermal = th > 0; if(th > 0) st.thermalAmt = Math.max(0.1, Math.min(1, th));
   thermalSync();
+  TXT.intro = o.introText !== false; st.introSleeve = o.introSleeve !== false; st.introFx = o.introFx !== false;   // looks saved before the switches existed have them on
+  introSync();
   if(!animId) draw();
 }
 // Random: another effect than the current one, with its main dials varied between 70% and 130% of its own look.
@@ -4959,9 +5020,10 @@ function exportTag(){
   const fx = c.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
   return fx ? art + "-" + fx : art;
 }
-return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
+return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
+         opening: () => { const op = openingNow(); return op ? { t: op.t, txtStart: op.plan.txtStart } : null; }, liveExport, setHitMap,
          setArtwork: function(){ const r = setArtwork.apply(null, arguments); thumbsDirty = true; scheduleThumbs(); return r; },
-         thumbs: () => scheduleThumbs(), exportTag, setLabel, mode: () => st.mode, art: () => st.art,
+         thumbs: () => scheduleThumbs(), exportTag, setLabel, mode: () => st.mode, art: () => st.art, plan: openingPlan,
          accent: () => {                                  // the most vivid tone of the artwork palette, as a CSS color
            let best = null, score = -1;
            for (const c of (currentPal || [])) {
@@ -5034,6 +5096,10 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
   const modeNow = () => String((window.FX && FX.mode) ? FX.mode() : -1);
   const sleeveNow = () => artNow() === "vinyl" && !!document.querySelector('#fxVinylOpt [data-v="sleeve"].on');
   const pctNow = () => Math.round((S.vinylPct || 0.86) * 100);
+  const txtIntroOn = () => !!document.querySelector('#txtIntroSw [data-ti="1"].on');
+  const sleeveIntroOn = () => !!document.querySelector('#sleeveIntroSw [data-si="1"].on');
+  const fxIntroOn = () => !!document.querySelector('#fxIntroSw [data-fi="1"].on');
+  const fxIntroApplies = () => !sleeveNow() && artNow() !== "off" && !!FXI[modeNow()];   // Disc, Card or Vinyl Record, with an effect selected
 
   // How the selected effect sits with the current artwork mode, and what to change if it does not
   function fitClause(m, f){
@@ -5081,7 +5147,7 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     const a = artNow();
     if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin, Reactor or Burst, all built around a round record.";
     if (a === "card") return "Card \u2192 the artwork stands still, like a poster. Good behind it: Bloom, Liquid, Burn, Halftone, or Eclipse for a ring of light.";
-    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. On Full render the record slides out, then the effect grows from it.";
+    if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. " + (sleeveIntroOn() ? "On Full render the record slides out, then the effect grows from it." : "Sleeve opening is off: all in place from the first frame.");
     if (a === "vinyl") return "Vinyl \u2192 black record, your artwork as its label. Cleanest with the effect Off and Clean text; Label image puts another picture on the label.";
     return "Artwork off \u2192 the effect is the whole picture. Depth 3D, Tunnel, Kaleido, Droste and Vortex show the artwork best this way.";
   }
@@ -5168,9 +5234,36 @@ return { canvas: glc, active, render, ensureAudio, liveExport, setHitMap,
     if (m === "16") return "Thermal \u2192 not available with Feedback, which is built from its own previous frame. Pick another effect.";
     return "Thermal " + pct + "% \u2192 the brightness of " + f.n + " becomes color: dark is violet, bright is yellow. Cover, record and text keep their colors." + (pct < 100 ? " Under 100% it blends with the effect's own colors." : "");
   }
+  function txtIntroHint(){
+    if (!txtIntroOn()) return "Text entrance off \u2192 the text is in place from the first frame.";
+    return "Text entrance on \u2192 on Full render the text fades in over two seconds, " + ((sleeveNow() && sleeveIntroOn()) ? "after the record has left the cover" : (fxIntroApplies() && fxIntroOn()) ? "after the effect has started" : "from the first second") + ". Fast loop shows it in place.";
+  }
+  function sleeveIntroHint(){
+    if (sleeveIntroOn()) return "Sleeve opening on \u2192 on Full render the record slides out, then the text appears, then the effect grows: about 12 s in all. Fast loop shows everything in place.";
+    return "Sleeve opening off \u2192 the record is out and the effect is on from the first frame." + (txtIntroOn() ? " The text still fades in: switch Text entrance off to stop that too." : "");
+  }
+  function fxIntroHint(){
+    if (!fxIntroOn()) return "Effect opening off \u2192 the effect is on from the first frame.";
+    if (!FXI[modeNow()]) return "Effect opening \u2192 no effect is selected, so there is nothing to open: pick one in Effects.";
+    return "Effect opening on \u2192 on Full render the effect starts after one second and grows out of the " + (artNow() === "card" ? "card" : "record") + ", then the text fades in. Fast loop shows everything in place.";
+  }
+  function playOpenHint(){
+    if (!document.querySelector('#fxRender [data-r="full"].on')) return "Play opening \u2192 openings exist only on Full render: set Export render to Full render in Effects, then press again.";
+    const plan = FX.plan(false), txt = txtIntroOn() && textOn(), parts = [];
+    if (plan.sleeve) parts.push("the record slides out");
+    if (plan.fx && !plan.sleeve) parts.push("the effect grows");
+    if (txt) parts.push("the text fades in");
+    if (plan.fx && plan.sleeve) parts.push("the effect grows");
+    if (!parts.length) return "Play opening \u2192 nothing to play: the opening switches are off, or there is no effect and no text.";
+    return "Play opening \u2192 the preview now runs like the exported video: " + parts.join(", then ") + ".";
+  }
+  on("#btnPlayOpen", "click", () => later(playOpenHint));
+  on("#fxIntroSw", "click", e => { if (e.target.closest("button")) later(fxIntroHint); });
+  on("#txtIntroSw", "click", e => { if (e.target.closest("button")) later(txtIntroHint); });
+  on("#sleeveIntroSw", "click", e => { if (e.target.closest("button")) later(sleeveIntroHint); });
   on("#thermalSw", "click", e => { if (e.target.closest("button")) later(thermalHint); });
   on("#fxThermal", "input", () => later(thermalHint));
-  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, thermalHint, modes: Object.keys(FXI) };   // for checks from the console
+  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, thermalHint, txtIntroHint, sleeveIntroHint, fxIntroHint, playOpenHint, modes: Object.keys(FXI) };   // for checks from the console
 })();
 
 // Scroll wheel over the video forwards to the menu, so the preview never moves
