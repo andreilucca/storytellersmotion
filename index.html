@@ -917,7 +917,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b48 · 2026-11-14 · test build: Play opening shows the openings in the preview (Artwork tab), also when a switch is flipped</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b49 · 2026-11-16 · test build: Vortex, Ripple, Melt, Droste and Liquid are back to their original code and look (v6.9)</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2294,62 +2294,37 @@ vec3 background(vec2 uv, float t, float aspect){
   vec3 col = uBgCol;
 
   if(uMode == 0){
-    // Melt → the artwork as a thick, glossy liquid: it sags and flows, lit from
-    // the slope of its own surface so the folds have depth
     vec2 p = uv + vec2(wx,wy)*w*0.8;
     float anchor = 0.5 + 0.18*sin(t*0.18 + uv.x*3.0) + 0.1*wx;
     p.y = mix(p.y, anchor, uStreak);
     p.y += t*0.028;
     p.x += wx*w*0.5;
-    col = artV(fitA(p));
-    float hL = fbm(vec2(uv.x*3.2*uScale + 0.09, uv.y*0.7*uScale + t*0.16 + 0.05)) - 0.5;   // the surface one step toward the light
-    float slope = wx - hL;
-    col *= 1.0 + slope*w*4.0;                                       // lit and shaded folds
-    col += vec3(1.0)*pow(max(slope*6.0, 0.0), 3.0)*0.35*w;          // gloss on the crests
-    col *= 0.82 + 0.30*smoothstep(-0.25, 0.30, wy);                 // the pools are darker
+    col = grade(texture2D(uTex, mirror(p)).rgb);
 
   } else if(uMode == 2){
-    // Vortex → the artwork drawn into a whirlpool with depth: relief on the
-    // turning surface, glints on three spiral ridges, an eye that falls away
     vec2 c = uv - 0.5; c.x *= aspect;
     float r = length(c);
     vec2 dirv = r > 1e-4 ? c/r : vec2(1.0,0.0);
-    vec2 np = dirv*(1.2 + r*3.0)*uScale + vec2(t*0.12, -t*0.09);
-    float wob  = fbm(np) - 0.5;
-    float wobL = fbm(np + vec2(0.10, 0.06)) - 0.5;                  // the same surface one step toward the light
+    float wob = fbm(dirv*(1.2 + r*3.0)*uScale + vec2(t*0.12, -t*0.09)) - 0.5;
     float a = atan(c.y, c.x)
             + uDir*( t*0.30 + uSwirl*4.5*exp(-r*2.2) )
             + wob*w*2.2;
     vec2 p = vec2(cos(a), sin(a))*r; p.x /= aspect; p += 0.5;
-    col = artV(fitA(p));
-    float d = 0.02*max(uStreak - 0.30, 0.0);                        // Streak above 0.3 adds motion blur along the turn
-    if(d > 0.0005){
-      vec2 p2 = vec2(cos(a+d*uDir), sin(a+d*uDir))*r; p2.x /= aspect; p2 += 0.5;
-      col = mix(col, artV(fitA(p2)), 0.5);
-    }
-    col *= 1.0 + (wob - wobL)*w*3.2;                                // relief
-    float ridge = pow(0.5 + 0.5*cos(a*3.0 - log(r + 0.02)*6.0), 6.0);
-    col += col*ridge*0.35*uSwirl*smoothstep(0.02, 0.25, r);         // light on the spiral ridges
-    col *= mix(0.30, 1.0, smoothstep(0.0, 0.42, r))*(1.0 - 0.18*smoothstep(0.55, 0.95, r));   // the eye falls away
+    float d = 0.006 + 0.02*uStreak;
+    vec2 p2 = vec2(cos(a+d*uDir), sin(a+d*uDir))*r; p2.x /= aspect; p2 += 0.5;
+    col = grade( (texture2D(uTex, mirror(p)).rgb + texture2D(uTex, mirror(p2)).rgb)*0.5 );
 
   } else if(uMode == 3){
-    // Ripple → the artwork under water: rings travel outward, each one lit on
-    // its near flank, shaded on the far one, with a glint on the crest
     vec2 c = uv - 0.5; c.x *= aspect;
     float r = length(c);
     vec2 dirv = r > 1e-4 ? c/r : vec2(1.0,0.0);
     float env  = 0.5 + 0.5*fbm(dirv*1.8*uScale + vec2(r*4.0*uScale - t*0.25, 0.0));
-    float kr   = 14.0 + 10.0*uScale;
-    float wave = sin(r*kr - t*1.8) * env;
-    float slope = cos(r*kr - t*1.8) * env;                          // slope of the water surface
+    float wave = sin(r*(14.0+10.0*uScale) - t*1.8) * env;
     float r2 = r + wave*0.055*(0.3+w);
     float a2 = atan(c.y, c.x) + uDir*t*0.06 + wave*0.35*uSwirl;
     vec2 p = vec2(cos(a2), sin(a2))*r2; p.x /= aspect; p += 0.5;
-    col = artV(fitA(p));
-    col *= 1.0 + slope*0.30*(0.4 + w);
-    col += vec3(1.0)*pow(max(slope, 0.0), 8.0)*0.30*(0.4 + w);
-    col *= 0.90 + 0.22*smoothstep(0.35, 1.0, wave);
-    col *= 1.0 - 0.25*smoothstep(0.45, 1.0, r);
+    col = grade(texture2D(uTex, mirror(p)).rgb);
+    col *= 0.88 + 0.24*smoothstep(0.35, 1.0, wave);
 
   } else if(uMode == 4){
     vec2 p = uv; p.x *= aspect;
@@ -2434,19 +2409,16 @@ vec3 background(vec2 uv, float t, float aspect){
   if(uMode == 10){
     // Droste → infinite spiralling zoom into the artwork (seam-free:
     // both wrap jumps equal exactly one mirror period of 2.0, and the
-    // jitter noise is fed continuous screen coords, never wrapped ones).
-    // Each turn of the spiral sits a step below the one outside it.
+    // jitter noise is fed continuous screen coords, never wrapped ones)
     vec2 c = uv - 0.5; c.x *= aspect;
     float r = max(length(c), 1e-4);
     float a2 = atan(c.y, c.x);
     float k = log(2.0 + uScale);
     float lr = log(r)/k;
-    float lv = fract(lr + t*0.12*uDir);                             // position inside the current level
-    vec2 p = vec2( (a2/6.28318)*2.0 + lr*uSwirl, lv*2.0 );
+    vec2 p = vec2( (a2/6.28318)*2.0 + lr*uSwirl,
+                   fract(lr + t*0.12*uDir)*2.0 );
     vec2 jit = (vec2(fbm(c*3.0 + t*0.05), fbm(c*3.0 + 7.7)) - 0.5)*w*0.3;
-    col = artV(p + jit);
-    col *= 0.62 + 0.38*smoothstep(0.0, 0.35, lv);                   // shadow where a level steps down
-    col += col*pow(smoothstep(0.90, 1.0, lv), 2.0)*0.45;            // light catching its outer lip
+    col = grade(texture2D(uTex, mirror(p + jit)).rgb);
     col *= smoothstep(0.0, 0.12, r);
 
   } else if(uMode == 12){
@@ -2454,15 +2426,12 @@ vec3 background(vec2 uv, float t, float aspect){
     float sc = 3.0*uScale;
     vec2 wp = uv + (vec2(fbm(uv*sc + vec2(t*0.12, 0.0)),
                          fbm(uv*sc + vec2(0.0, t*0.10) + 5.1))-0.5)*w*1.2;
-    vec3 base = grade(texture2D(uTex, mirror(fitA(wp))).rgb);
-    // lighting from a smooth two-octave height field (the full fbm broke the surface into facets)
-    vec2 hp = uv*sc*0.8 + t*0.10;
-    float n0 = noise(hp)*0.72 + noise(hp*2.07 + 4.3)*0.28;
-    float e = 0.030;
-    vec2 hx = (uv + vec2(e, 0.0))*sc*0.8 + t*0.10, hy = (uv + vec2(0.0, e))*sc*0.8 + t*0.10;
-    float nx = noise(hx)*0.72 + noise(hx*2.07 + 4.3)*0.28 - n0;
-    float ny = noise(hy)*0.72 + noise(hy*2.07 + 4.3)*0.28 - n0;
-    vec3 nor = normalize(vec3(-nx/e, -ny/e, 1.6));
+    vec3 base = grade(texture2D(uTex, mirror(wp)).rgb);
+    float n0 = fbm(uv*sc + t*0.10);
+    float e = 0.012;
+    float nx = fbm((uv+vec2(e,0.0))*sc + t*0.10) - n0;
+    float ny = fbm((uv+vec2(0.0,e))*sc + t*0.10) - n0;
+    vec3 nor = normalize(vec3(-nx/e, -ny/e, 2.2));
     vec3 L = normalize(vec3(cos(t*0.20)*0.6, 0.7, 0.55));
     float diff = max(dot(nor, L), 0.0);
     float spec = pow(max(dot(reflect(-L, nor), vec3(0.0,0.0,1.0)), 0.0), 28.0);
@@ -3493,16 +3462,16 @@ const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal
             speed:1, warp:0.35, streak:0.65, swirl:0.5, scale:1, trail:0, beat:0};
 const MODE_DEFAULTS = {
   "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
-  "0": {speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.05, grain:0, vig:0.2},
-  "2": {speed:1,   warp:0.40, streak:0.30, swirl:0.6, scale:1,   trail:0, ca:0, glow:0.05, grain:0, vig:0.2},
-  "3": {speed:1,   warp:0.50, streak:0.30, swirl:0.4, scale:1,   trail:0, ca:0, glow:0.05, grain:0, vig:0.2},
+  "0": {speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
+  "2": {speed:1,   warp:0.40, streak:0.30, swirl:0.6, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
+  "3": {speed:1,   warp:0.50, streak:0.30, swirl:0.4, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
   "4": {speed:1,   warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.15, ca:0, glow:0.25, grain:0, vig:0.15},
   "6": {speed:0.35,   warp:0.30, streak:0.30, swirl:0.4, scale:1,   trail:0.35, ca:0.12, glow:0.2, grain:0, vig:0.1},
   "7": {speed:0.8, warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0.1, glow:0.15, grain:0, vig:0.15},
   "8": {speed:1.2, warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0.25, ca:0.25, glow:0.05, grain:0, vig:0.15},
   "9": {speed:1,   warp:0.40, streak:0.30, swirl:0.7, scale:1,   trail:0.75, ca:0, glow:0.3, grain:0, vig:0.1},
-  "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0, glow:0.05, grain:0, vig:0.15},
-  "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.2, grain:0, vig:0.2},
+  "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0, glow:0, grain:0, vig:0},
+  "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
   "13":{speed:1,   warp:0.40, streak:0.60, swirl:0.6, scale:1,   trail:0.50, ca:0.08, glow:0.2, grain:0, vig:0.15},
   "17":{speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0, ca:0.25, glow:0.05, grain:0.1, vig:0.25},
   "18":{speed:0.8, warp:0.40, streak:0.60, swirl:0.5, scale:1,   trail:0.10, ca:0.05, glow:0.2, grain:0.08, vig:0.3},
@@ -5060,7 +5029,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   //    S = grows from the centre, C = works behind anything.  d = what each dial does, most useful first.
   const FXI = {
     "0":  { n:"Melt",     g:"B", d:{ warp:"how much it melts", streak:"how far it sags", scale:"size of the folds" } },
-    "2":  { n:"Vortex",   g:"B", d:{ swirl:"twist of the whirlpool", warp:"wobble and relief", streak:"motion blur, from 0.3 up", scale:"size of the wobble" } },
+    "2":  { n:"Vortex",   g:"B", d:{ swirl:"twist of the whirlpool", warp:"wobble of the arms", streak:"blur along the turn", scale:"size of the wobble" } },
     "3":  { n:"Ripple",   g:"B", d:{ warp:"height of the waves", scale:"number of rings", swirl:"twist of the rings" } },
     "4":  { n:"Bloom",    g:"C", d:{ swirl:"how much the inks fuse", scale:"smaller blobs as it rises", warp:"drift" } },
     "6":  { n:"Tunnel",   g:"B", d:{ swirl:"rotation of the tunnel", scale:"repeats around the tunnel", warp:"wobble of the walls" } },
