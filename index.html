@@ -823,7 +823,6 @@
         <button class="fx-btn" data-m="12">Liquid</button>
         <button class="fx-btn" data-m="4">Bloom</button>
         <button class="fx-btn" data-m="9" title="Follows the music itself → Fast loop would repeat only the first seconds of bars; on a full song use Export render: Full render">Spectrum <span class="fx-badge">FULL</span></button>
-        <button class="fx-btn" data-m="13" title="A whirlpool of energy with depth: two layers of spiral arms turn against each other, lit like ridges, the artwork is drawn into the spiral, a dark core sits inside a bright ring. Swirl = twist, Warp = wobble, Streak = node density.">Reactor</button>
         <button class="fx-btn" data-m="17" title="Tape wobble, chroma bleed, scanlines and soft snow. Streak = bleed, Swirl = noise.">VHS</button>
         <button class="fx-btn" data-m="18" title="Film burn: warm light leaks drifting over the artwork with gentle flicker. Streak = intensity, Swirl = leak size.">Burn</button>
         <button class="fx-btn" data-m="19" title="The artwork as rotated print dots on warm paper → riso/editorial look. Scale = dot density.">Halftone</button>
@@ -917,7 +916,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b49 · 2026-11-16 · test build: Vortex, Ripple, Melt, Droste and Liquid are back to their original code and look (v6.9)</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b50 · 2026-11-16 · test build: Reactor removed</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2198,7 +2197,7 @@ uniform float uTime;
 uniform sampler2D uTex;    // artwork (unit 0)
 uniform sampler2D uPrev;
 uniform sampler2D uDepth;   // pseudo-depth map built from the artwork   // previous frame (unit 1)
-uniform int   uMode;   // 14 = echo (blurred artwork fill)       // -1 off,0 melt,1 flow,2 vortex,3 ripple,4 bloom,5 nebula,6 tunnel,7 kaleido,8 glitch,9 spectrum,10 droste,11 warp,12 liquid,13 reactor
+uniform int   uMode;   // 14 = echo (blurred artwork fill)       // -1 off,0 melt,1 flow,2 vortex,3 ripple,4 bloom,5 nebula,6 tunnel,7 kaleido,8 glitch,9 spectrum,10 droste,11 warp,12 liquid
 uniform float uSpeed, uWarp, uStreak, uSwirl, uScale, uDir, uTrail;
 uniform vec3  uPal[6];
 uniform float uPalN;
@@ -2436,43 +2435,6 @@ vec3 background(vec2 uv, float t, float aspect){
     float diff = max(dot(nor, L), 0.0);
     float spec = pow(max(dot(reflect(-L, nor), vec3(0.0,0.0,1.0)), 0.0), 28.0);
     col = base*(0.42 + 0.72*diff) + vec3(1.0,0.98,0.92)*spec*0.85;
-  }
-
-  if(uMode == 13){
-    // Reactor → a whirlpool of energy with real depth. Two layers of spiral
-    // arms at different depths turn against each other, the near one lit from
-    // one side so the arms read as glowing ridges; the artwork is drawn into
-    // the spiral underneath; a dark core sits inside a bright accretion ring,
-    // and bright nodes chase each other outward along the arms. Every angular
-    // term uses integer harmonics or cos/sin pairs, so it is seamless all round.
-    vec2 c = uv - 0.5; c.x *= aspect;
-    float r = length(c) + 1e-4;
-    float a2 = atan(c.y, c.x);
-    float twist = 2.5 + uSwirl*5.0;
-    float wob = (fbm(c*3.0*uScale + t*0.10) - 0.5)*w*2.0;
-    float sp  = a2 + log(r)*twist + t*uDir*0.9 + wob;                    // near layer
-    float sp2 = a2 - log(r)*twist*0.6 - t*uDir*0.45 + wob*0.5 + 1.3;     // far layer turns the other way
-    float ridge = smoothstep(0.20, 1.0, cos(sp*3.0)*0.5 + 0.5);          // 3 spiral arms
-    float side  = smoothstep(0.20, 1.0, cos(sp*3.0 + 0.9)*0.5 + 0.5);
-    float lit   = clamp(ridge + (ridge - side)*0.9, 0.0, 1.4);           // side light: one flank of each arm glows
-    vec2 spv = vec2(cos(sp), sin(sp));
-    float pulse = fbm(spv*1.5 + vec2(r*5.0*uScale - t*0.9, 0.0));
-    float energy = ridge*(0.35 + 0.85*pulse);
-    float far = smoothstep(0.45, 1.0, cos(sp2*5.0)*0.5 + 0.5)
-              * (0.5 + 0.5*fbm(vec2(cos(sp2), sin(sp2))*2.0 + r*3.0));   // 5 finer arms deeper down
-    float sw = log(r)*twist*0.35 + t*uDir*0.25;
-    vec2 ac = mat2(cos(sw), -sin(sw), sin(sw), cos(sw))*(uv - 0.5);
-    vec3 art = grade(texture2D(uTex, mirror(fitA(ac*(0.9 + 0.3*r) + 0.5))).rgb);   // the artwork, pulled into the spiral
-    float chain = pow(max(0.0, cos(sp*3.0)*0.5 + 0.5), 8.0)
-                * pow(max(0.0, sin(r*(14.0 + 10.0*uStreak) - t*3.2)*0.5 + 0.5), 6.0);
-    float depth = smoothstep(0.0, 0.55, r);                              // it all falls into darkness toward the centre
-    col = art*(0.10 + 0.24*depth)*(0.40 + 0.60*far)
-        + palette(0.35)*far*0.16*depth
-        + palette(clamp(energy, 0.0, 1.0))*(0.10 + energy*0.85)*(0.55 + 0.60*lit)*(0.35 + 0.65*depth)
-        + palette(0.92)*chain*1.3;
-    col *= smoothstep(0.022, 0.075, r);                                  // the dark core
-    float ring = exp(-pow((r - 0.058)/0.016, 2.0));
-    col += palette(0.90)*ring*(0.55 + 0.45*sin(a2 - t*2.0*uDir))*0.9 + palette(0.85)*exp(-r*9.0)*0.10;   // accretion ring
   }
 
   if(uMode == 17){
@@ -3472,7 +3434,6 @@ const MODE_DEFAULTS = {
   "9": {speed:1,   warp:0.40, streak:0.30, swirl:0.7, scale:1,   trail:0.75, ca:0, glow:0.3, grain:0, vig:0.1},
   "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0, glow:0, grain:0, vig:0},
   "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
-  "13":{speed:1,   warp:0.40, streak:0.60, swirl:0.6, scale:1,   trail:0.50, ca:0.08, glow:0.2, grain:0, vig:0.15},
   "17":{speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0, ca:0.25, glow:0.05, grain:0.1, vig:0.25},
   "18":{speed:0.8, warp:0.40, streak:0.60, swirl:0.5, scale:1,   trail:0.10, ca:0.05, glow:0.2, grain:0.08, vig:0.3},
   "19":{speed:0.5, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0.2},
@@ -5038,7 +4999,6 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     "9":  { n:"Spectrum", g:"S", audio:1, d:{ swirl:"height of the bars", scale:"size of the centre ring" } },
     "10": { n:"Droste",   g:"B", d:{ swirl:"twist of the spiral", scale:"zoom between levels", warp:"jitter" } },
     "12": { n:"Liquid",   g:"B", d:{ warp:"how strongly it flows", scale:"size of the ripples" } },
-    "13": { n:"Reactor",  g:"A", d:{ swirl:"twist of the arms", warp:"wobble", streak:"density of the nodes", scale:"size of the pulses" } },
     "16": { n:"Feedback", g:"B", d:{ streak:"speed of the fall", swirl:"how long the echoes last", scale:"size of the source window", warp:"wobble of the spin" } },
     "17": { n:"VHS",      g:"B", d:{ streak:"color bleed", swirl:"amount of snow", warp:"tape wobble" } },
     "18": { n:"Burn",     g:"B", d:{ streak:"strength of the light leaks", swirl:"size of the leaks", warp:"drift and flicker" } },
@@ -5114,7 +5074,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   }
   function artHint(){
     const a = artNow();
-    if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin, Reactor or Burst, all built around a round record.";
+    if (a === "disc") return "Disc \u2192 the artwork itself spins. Best behind it: Eclipse, Tendril, Orbits, Twinspin or Burst, all built around a round record.";
     if (a === "card") return "Card \u2192 the artwork stands still, like a poster. Good behind it: Bloom, Liquid, Burn, Halftone, or Eclipse for a ring of light.";
     if (a === "vinyl" && sleeveNow()) return "Sleeve \u2192 cover plus record, made for Square. Eclipse, Tendril and Orbits follow the record. " + (sleeveIntroOn() ? "On Full render the record slides out, then the effect grows from it." : "Sleeve opening is off: all in place from the first frame.");
     if (a === "vinyl") return "Vinyl \u2192 black record, your artwork as its label. Cleanest with the effect Off and Clean text; Label image puts another picture on the label.";
