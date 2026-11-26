@@ -449,12 +449,12 @@
   .preset-row select:focus { border-color: var(--accent); }
   .preset-row .fx-btn { padding: 0 11px; min-height: 32px; height: 32px; font-size: 0.66rem; }
   /* Text size: one small joined control at the right end of the heading, values in a muted orange */
-  #txtSize, #thermalSw, #txtIntroSw, #sleeveIntroSw, #fxIntroSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
-  #txtSize button, #thermalSw button, #txtIntroSw button, #sleeveIntroSw button, #fxIntroSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
+  #txtSize, #thermalSw, #filmSw, #txtIntroSw, #sleeveIntroSw, #fxIntroSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
+  #txtSize button, #thermalSw button, #filmSw button, #txtIntroSw button, #sleeveIntroSw button, #fxIntroSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
                     text-transform: none; color: #a87840; border-left: 1px solid #33291d; transition: color .15s, background .15s; }
-  #txtSize button:first-child, #thermalSw button:first-child, #txtIntroSw button:first-child, #sleeveIntroSw button:first-child, #fxIntroSw button:first-child { border-left: none; }
-  #txtSize button:hover, #thermalSw button:hover, #txtIntroSw button:hover, #sleeveIntroSw button:hover, #fxIntroSw button:hover { color: #cf9450; }
-  #txtSize button.on, #thermalSw button.on, #txtIntroSw button.on, #sleeveIntroSw button.on, #fxIntroSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
+  #txtSize button:first-child, #thermalSw button:first-child, #filmSw button:first-child, #txtIntroSw button:first-child, #sleeveIntroSw button:first-child, #fxIntroSw button:first-child { border-left: none; }
+  #txtSize button:hover, #thermalSw button:hover, #filmSw button:hover, #txtIntroSw button:hover, #sleeveIntroSw button:hover, #fxIntroSw button:hover { color: #cf9450; }
+  #txtSize button.on, #thermalSw button.on, #filmSw button.on, #txtIntroSw button.on, #sleeveIntroSw button.on, #fxIntroSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
   .txt-models { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
   .txt-models span { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6f6f; padding-right: 4px; }
   .txt-models .fx-btn { padding: 6px 2px; min-height: 28px; font-size: 0.68rem; }
@@ -822,7 +822,6 @@
         <button class="fx-btn" data-m="10">Droste</button>
         <button class="fx-btn" data-m="12">Liquid</button>
         <button class="fx-btn" data-m="4">Bloom</button>
-        <button class="fx-btn" data-m="9" title="Follows the music itself → Fast loop would repeat only the first seconds of bars; on a full song use Export render: Full render">Spectrum <span class="fx-badge">FULL</span></button>
         <button class="fx-btn" data-m="17" title="Tape wobble, chroma bleed, scanlines and soft snow. Streak = bleed, Swirl = noise.">VHS</button>
         <button class="fx-btn" data-m="18" title="Film burn: warm light leaks drifting over the artwork with gentle flicker. Streak = intensity, Swirl = leak size.">Burn</button>
         <button class="fx-btn" data-m="19" title="The artwork as rotated print dots on warm paper → riso/editorial look. Scale = dot density.">Halftone</button>
@@ -845,6 +844,11 @@
         <span id="thermalSw" title="Thermal on or off"><button data-th="0" class="on">Off</button><button data-th="1">On</button></span>
       </div>
       <div class="fx-row"><input type="range" id="fxThermal" min="0.1" max="1" step="0.05" value="1" disabled style="opacity:0.35"></div>
+
+      <div class="fx-lbl" title="Light leaks flicker over the whole frame like the end of a film roll: red, orange, yellow, green and blue light coming and going at random all the time, plus hairs and dust. It lies over the artwork too and works with any effect.">Film burn <b id="fxvFilm" style="text-transform:none">Off</b>
+        <span id="filmSw" title="Film burn on or off"><button data-fb="0" class="on">Off</button><button data-fb="1">On</button></span>
+      </div>
+      <div class="fx-row"><input type="range" id="fxFilm" min="0.1" max="1" step="0.05" value="1" disabled style="opacity:0.35"></div>
 
       <div class="fx-lbl">Effect settings <button class="fx-rst" id="fxRstFx">&#8634; reset</button></div>
       <div class="fx-lbl" style="margin-top:4px">Speed <b id="fxvSpeed">1</b></div>
@@ -916,7 +920,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b50 · 2026-11-16 · test build: Reactor removed</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b53 · 2026-11-26 · test build: Film burn now flickers at random all the time, with no waiting and no calm</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2197,7 +2201,7 @@ uniform float uTime;
 uniform sampler2D uTex;    // artwork (unit 0)
 uniform sampler2D uPrev;
 uniform sampler2D uDepth;   // pseudo-depth map built from the artwork   // previous frame (unit 1)
-uniform int   uMode;   // 14 = echo (blurred artwork fill)       // -1 off,0 melt,1 flow,2 vortex,3 ripple,4 bloom,5 nebula,6 tunnel,7 kaleido,8 glitch,9 spectrum,10 droste,11 warp,12 liquid
+uniform int   uMode;   // 14 = echo (blurred artwork fill)       // -1 off,0 melt,1 flow,2 vortex,3 ripple,4 bloom,5 nebula,6 tunnel,7 kaleido,8 glitch,10 droste,11 warp,12 liquid
 uniform float uSpeed, uWarp, uStreak, uSwirl, uScale, uDir, uTrail;
 uniform vec3  uPal[6];
 uniform float uPalN;
@@ -2389,20 +2393,6 @@ vec3 background(vec2 uv, float t, float aspect){
     col = grade(col);
     col *= 0.92 + 0.08*sin(uv.y*uRes.y*3.14159);
 
-  } else if(uMode == 9){
-    // Spectrum → radial equalizer in palette colors, echo-friendly
-    vec2 c = uv - 0.5; c.x *= aspect;
-    float r = length(c);
-    float a = atan(c.y, c.x)*uDir + t*0.10;
-    float x = fract(a/6.28318 + 0.5);
-    float sv = specAt(x)*(0.35 + uSwirl*0.9);
-    float r0 = 0.14 + uScale*0.06;
-    float top = r0 + sv*0.34;
-    float bar = smoothstep(top+0.006, top-0.006, r) * smoothstep(r0-0.010, r0+0.004, r);
-    col = palette(clamp(sv*1.4,0.0,1.0))*bar*(0.7 + 0.8*sv);
-    col += palette(uBeat)*exp(-r*7.0)*uBeat*0.9;             // kick flash in the core
-    float n = fbm(c*3.0*uScale + t*0.08);
-    col += palette(n)*0.07;                                   // faint nebula floor
   }
 
   if(uMode == 10){
@@ -3131,7 +3121,17 @@ varying vec2 vUv;
 uniform sampler2D uScene;
 uniform float uCA, uGlow, uGrain, uVig, uTimeC;
 uniform vec2 uResC;
+// Film burn: values for the current film frame, worked out in JavaScript (filmState)
+uniform vec4 uFlmA, uFlmB;      // two light leaks: centre x, centre y, radius, strength (0 = none)
+uniform vec3 uFlmCa, uFlmCb;    // their colors
+uniform vec4 uFlmP;             // x: even haze of color A, y: how far the core burns toward white, zw: noise offset
+uniform vec4 uFlmH;             // hair: start x, start y, angle, curvature
+uniform vec4 uFlmH2;            // hair length, hair opacity, dust seed, dust opacity
 float hashC(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+float noiseC(vec2 p){
+  vec2 i = floor(p), f = fract(p); f = f*f*(3.0 - 2.0*f);
+  return mix(mix(hashC(i), hashC(i + vec2(1.0, 0.0)), f.x), mix(hashC(i + vec2(0.0, 1.0)), hashC(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 void main(){
   // canonical finishing order: aberration → grain → bloom → vignette
   vec2 c = vUv - 0.5;
@@ -3164,6 +3164,38 @@ void main(){
   // Vignette: soft corner falloff
   float vd = length(c*vec2(uResC.x/uResC.y, 1.0))*1.15;
   col *= 1.0 - uVig*0.55*smoothstep(0.45, 1.05, vd);
+
+  // Film burn: light leaking onto the film. It lies over the whole frame, artwork included.
+  if(uFlmA.w + uFlmB.w + uFlmP.x + uFlmH2.y + uFlmH2.w > 0.0){
+    vec2 asp = vec2(uResC.x/uResC.y, 1.0);
+    vec2 q = vUv*asp;                                             // frame coordinates, height = 1
+    float n1 = noiseC(q*1.7 + uFlmP.zw), n2 = noiseC(q*4.3 + uFlmP.wz + 3.1);
+    // the noise bends the distance itself, so a leak is a lumpy cloud and never a clean circle
+    float da = length(q - uFlmA.xy*asp)/uFlmA.z*(0.60 + 0.80*n1);
+    float fa = uFlmA.w*pow(clamp(1.0 - da, 0.0, 1.0), 1.5)*(0.75 + 0.40*n2);
+    float db = length(q - uFlmB.xy*asp)/uFlmB.z*(1.35 - 0.65*n1);
+    float fb = uFlmB.w*pow(clamp(1.0 - db, 0.0, 1.0), 1.5);
+    vec3 leak = uFlmCa*(fa + uFlmP.x*(0.55 + 0.6*n1)) + uFlmCb*fb;
+    float heat = max(fa - 0.42, 0.0)*uFlmP.y;                     // the core burns through: orange, yellow, then softly to white
+    leak += vec3(1.0, 0.72, 0.22)*heat*1.1 + vec3(1.0)*smoothstep(0.30, 1.50, heat)*0.90;
+    col = 1.0 - (1.0 - col)*(1.0 - clamp(leak, 0.0, 1.0));        // adds like exposure: white stays white, black takes the color
+    if(uFlmH2.y > 0.0){                                           // a hair caught in the gate
+      vec2 d = q - uFlmH.xy*asp; float ca = cos(uFlmH.z), sa = sin(uFlmH.z);
+      vec2 l = vec2(d.x*ca + d.y*sa, -d.x*sa + d.y*ca);           // along and across the hair
+      float yy = uFlmH.w*l.x*l.x + 0.010*sin(l.x*15.0 + uFlmH.z*7.0);
+      float wd = 1.5/uResC.y;
+      float hair = smoothstep(wd*1.6, wd*0.4, abs(l.y - yy))*smoothstep(0.0, 0.03, l.x)*smoothstep(uFlmH2.x, uFlmH2.x - 0.05, l.x);
+      col += vec3(0.80, 0.68, 0.55)*hair*uFlmH2.y;
+    }
+    if(uFlmH2.w > 0.0){                                           // dust
+      vec2 g = q*44.0 + uFlmH2.z; vec2 ci = floor(g);
+      if(hashC(ci) > 0.9985){
+        vec2 cp = fract(g) - 0.5 - (vec2(hashC(ci + 3.7), hashC(ci + 9.1)) - 0.5)*0.5;
+        float sp = smoothstep(0.24, 0.06, length(cp));
+        col = mix(col, hashC(ci + 5.5) > 0.5 ? vec3(0.02) : min(col + 0.55, 1.0), sp*uFlmH2.w);
+      }
+    }
+  }
 
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -3207,6 +3239,7 @@ const UCopyGrain = gl.getUniformLocation(progCopy, "uGrain");
 const UCopyVig = gl.getUniformLocation(progCopy, "uVig");
 const UCopyTime = gl.getUniformLocation(progCopy, "uTimeC");
 const UCopyRes = gl.getUniformLocation(progCopy, "uResC");
+const UFlm = {}; ["uFlmA","uFlmB","uFlmCa","uFlmCb","uFlmP","uFlmH","uFlmH2"].forEach(n => UFlm[n] = gl.getUniformLocation(progCopy, n));
 
 // ── ping-pong framebuffers (trails), half-float when supported ──
 const extHF   = gl.getExtension("OES_texture_half_float");
@@ -3420,7 +3453,7 @@ function applyPalette(pal, keepBase){
 }
 
 // ── state + per-effect slider defaults ──
-const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal:false, thermalAmt:1, introSleeve:true, introFx:true, ca:0, glow:0, grain:0, vig:0,
+const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal:false, thermalAmt:1, film:false, filmAmt:1, introSleeve:true, introFx:true, ca:0, glow:0, grain:0, vig:0,
             speed:1, warp:0.35, streak:0.65, swirl:0.5, scale:1, trail:0, beat:0};
 const MODE_DEFAULTS = {
   "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
@@ -3431,7 +3464,6 @@ const MODE_DEFAULTS = {
   "6": {speed:0.35,   warp:0.30, streak:0.30, swirl:0.4, scale:1,   trail:0.35, ca:0.12, glow:0.2, grain:0, vig:0.1},
   "7": {speed:0.8, warp:0.30, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0.1, glow:0.15, grain:0, vig:0.15},
   "8": {speed:1.2, warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0.25, ca:0.25, glow:0.05, grain:0, vig:0.15},
-  "9": {speed:1,   warp:0.40, streak:0.30, swirl:0.7, scale:1,   trail:0.75, ca:0, glow:0.3, grain:0, vig:0.1},
   "10":{speed:0.8, warp:0.20, streak:0.30, swirl:0.5, scale:1,   trail:0.20, ca:0, glow:0, grain:0, vig:0},
   "12":{speed:1,   warp:0.60, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
   "17":{speed:1,   warp:0.50, streak:0.50, swirl:0.5, scale:1,   trail:0, ca:0.25, glow:0.05, grain:0.1, vig:0.25},
@@ -3484,7 +3516,7 @@ document.getElementById("fxRender").addEventListener("click", e=>{
 function exportDurationSec(){
   return S.audioLoaded ? (S.trimEnd - S.trimStart) * S.audioDuration : S.silentDuration;
 }
-const FX_NEEDS_FULL = {2:"Vortex",3:"Ripple",6:"Tunnel",7:"Kaleido",9:"Spectrum",16:"Feedback",24:"Depth 3D"};
+const FX_NEEDS_FULL = {2:"Vortex",3:"Ripple",6:"Tunnel",7:"Kaleido",16:"Feedback",24:"Depth 3D"};
 let fxFullHintShown = false, fxBurstHintShown = false;
 document.getElementById("fxModes").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
@@ -4220,6 +4252,9 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1f(UCopyVig, st.vig);
   gl.uniform1f(UCopyTime, t);
   gl.uniform2f(UCopyRes, W, H);
+  const fl = st.film ? filmState(t, st.filmAmt) : FILM_NONE;      // film burn for this instant
+  gl.uniform4fv(UFlm.uFlmA, fl.A); gl.uniform4fv(UFlm.uFlmB, fl.B); gl.uniform3fv(UFlm.uFlmCa, fl.ca); gl.uniform3fv(UFlm.uFlmCb, fl.cb);
+  gl.uniform4fv(UFlm.uFlmP, fl.P); gl.uniform4fv(UFlm.uFlmH, fl.H); gl.uniform4fv(UFlm.uFlmH2, fl.H2);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   cur = 1 - cur;
 }
@@ -4227,6 +4262,63 @@ function render(W, H, angleDeg, tOverride){
 function active(){
   return S.imageLoaded && (st.mode >= 0 || st.art !== "disc" || !!textOn());   // text needs the engine too
 }
+
+// ── FILM BURN ───────────────────────────────────────────────
+// Light leaks that flicker over the whole frame like the end of a film roll, with hairs and dust.
+// Everything is a pure function of the time, so the preview and the export show the same flicker.
+// The rhythm follows what was measured on real film-burn footage: light is on about half of the
+// time, in runs of one to five film frames, with dark gaps that rarely pass a third of a second.
+// There is no build-up and no calm: it comes and goes at random, all the time. Most leaks are faint
+// washes of color, about a third are medium and a fifth burn hot.
+const FILM_FPS = 24, FILM_SLOT = 5;                           // a slot is 5 film frames, about a fifth of a second
+function fhash(n, k){ let x = (Math.imul(n | 0, 374761393) + Math.imul(k | 0, 668265263)) | 0; x = Math.imul(x ^ (x >>> 13), 1274126177); x ^= x >>> 16; return (x >>> 0)/4294967296; }
+const FILM_COL = { blue:[0.10, 0.12, 0.95], violet:[0.38, 0.10, 0.78], red:[0.85, 0.04, 0.06], orange:[1.00, 0.36, 0.05], yellow:[1.00, 0.78, 0.25], green:[0.12, 0.85, 0.18] };
+function filmEvent(n){                                        // the leak that covers film frame n, or null
+  const slot = Math.floor(n/FILM_SLOT), k = n - slot*FILM_SLOT, R = j => fhash(slot, 100 + j), lay = R(0);
+  let k0 = -1, id = 0;
+  if(lay < 0.04) return null;                                 // rarely, a whole slot stays dark
+  if(lay < 0.70){ const o = Math.floor(R(1)*3), d = 1 + Math.floor(R(2)*(FILM_SLOT - o)); if(k >= o && k < o + d){ k0 = o; id = slot*16 + 1; } }
+  else { const d1 = 1 + Math.floor(R(3)*2), d2 = 1 + Math.floor(R(4)*(FILM_SLOT - d1 - 1));   // two short leaks, one dark frame between them
+         if(k < d1){ k0 = 0; id = slot*16 + 6; } else if(k > d1 && k <= d1 + d2){ k0 = d1 + 1; id = slot*16 + 11; } }
+  if(k0 < 0) return null;
+  for(let j = k0 + 1; j <= k; j++) if(fhash(slot*FILM_SLOT + j, 9) < 0.45) id++;   // while the light stays on, the leak often changes to another
+  return id;
+}
+function filmLeak(id){                                        // one leak: how strong, which colors, where
+  const R = k => fhash(id, k), c = R(1), cls = c < 0.47 ? 0 : c < 0.72 ? 1 : 2, u = R(2);   // 0 faint, 1 medium, 2 hot
+  let a;
+  if(cls === 0) a = u < 0.41 ? (R(3) < 0.6 ? "blue" : "violet") : u < 0.75 ? (R(3) < 0.5 ? "orange" : "yellow") : "red";
+  else if(cls === 1) a = u < 0.40 ? "red" : u < 0.62 ? "orange" : u < 0.82 ? "yellow" : "blue";
+  else a = u < 0.54 ? "yellow" : u < 0.78 ? "red" : "orange";
+  const others = ["green", "red", "orange", "blue", "violet", "yellow"].filter(x => x !== a), b = others[Math.floor(R(6)*others.length)];
+  const two = R(5) < (cls === 0 ? 0.19 : 0.48);               // a second color in the same frame
+  const rim = (k, pull) => {                                  // a point on the edge of the frame, pulled inward
+    const side = Math.floor(R(k)*4), v = R(k + 1), d = pull*R(k + 2);
+    return side === 0 ? [v, d] : side === 1 ? [v, 1 - d] : side === 2 ? [d, v] : [1 - d, v];
+  };
+  const pa = R(7) < 0.40 ? [0.2 + 0.6*R(8), 0.2 + 0.6*R(9)] : rim(10, 0.30), pb = rim(14, 0.20);
+  return { S: cls === 0 ? FILM_S[0] + FILM_S[1]*R(4) : cls === 1 ? FILM_S[2] + FILM_S[3]*R(4) : FILM_S[4] + FILM_S[5]*R(4),
+           ca: FILM_COL[a], cb: FILM_COL[b], A: [pa[0], pa[1], 0.75 + 0.65*R(18)], B: [pb[0], pb[1], 0.55 + 0.55*R(19)],
+           wB: two ? 0.7 + 0.5*R(20) : 0, heat: (cls === 2 && a !== "red") ? 0.5 + 0.6*R(21) : (cls === 1 && a === "yellow") ? 0.5*R(21) : 0, nx: R(16)*40, ny: R(17)*40 };
+}
+const FILM_S = [0.05, 0.09, 0.14, 0.24, 0.37, 0.10];          // strength ranges: faint, medium, hot (start, span)
+const FILM_GAIN = [2.3, 1.5, 0.45];                            // leak A, leak B, even haze
+function filmState(t, amt){
+  const n = Math.floor(t*FILM_FPS), id = filmEvent(n);
+  const o = { A:[0,0,1,0], B:[0,0,1,0], ca:[0,0,0], cb:[0,0,0], P:[0,0,0,0], H:[0,0,0,0], H2:[0,0,0,0] };
+  if(id !== null){
+    const L = filmLeak(id), S = L.S*(0.45 + 0.55*fhash(n, 7))*amt;   // the same leak flickers from frame to frame while it lasts
+    o.A = [L.A[0], L.A[1], L.A[2], S*FILM_GAIN[0]]; o.B = [L.B[0], L.B[1], L.B[2], S*L.wB*FILM_GAIN[1]];
+    o.ca = L.ca; o.cb = L.cb; o.P = [S*FILM_GAIN[2], L.heat, L.nx, L.ny];
+  }
+  if(fhash(n, 40) < 0.09){                                    // a hair, for one film frame
+    o.H = [fhash(n, 41), fhash(n, 42), fhash(n, 43)*6.2832, (fhash(n, 44) - 0.5)*2.4];
+    o.H2[0] = 0.15 + 0.35*fhash(n, 45); o.H2[1] = (0.25 + 0.30*fhash(n, 46))*amt;
+  }
+  if(fhash(n, 50) < 0.30){ o.H2[2] = fhash(n, 51)*40; o.H2[3] = (0.5 + 0.4*fhash(n, 52))*amt; }   // dust
+  return o;
+}
+const FILM_NONE = { A:[0,0,1,0], B:[0,0,1,0], ca:[0,0,0], cb:[0,0,0], P:[0,0,0,0], H:[0,0,0,0], H2:[0,0,0,0] };
 
 // ── DETERMINISTIC GPU EXPORT (WebCodecs) ────────────────────
 // Every frame is rendered at its exact timestamp and handed straight to the
@@ -4603,7 +4695,7 @@ async function liveExportRealtime(){
   ensureAudio();
   // Video-only capture. The audio is NOT re-captured live (that path stutters
   // under load) → it is muxed afterwards straight from the original file, so
-  // the soundtrack in the MP4 is bit-perfect. Spectrum still reads the live
+  // the soundtrack in the MP4 is bit-perfect. Cymatics still reads the live
   // playback through the analyser during the render.
   const stream = comp.captureStream(30);
   const mime = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
@@ -4796,7 +4888,7 @@ const thumbCv = document.createElement("canvas"); thumbCv.width = thumbCv.height
 const thumbCx = thumbCv.getContext("2d", { willReadFrequently: true });
 function makeThumbs(){
   if(!S.imageLoaded || !document.body.classList.contains("lay-new")) return;
-  const keys = ["mode","art","dir","thermal"].concat(Object.keys(SLIDERS)), keep = {};
+  const keys = ["mode","art","dir","thermal","film"].concat(Object.keys(SLIDERS)), keep = {};
   keys.forEach(k => keep[k] = st[k]);
   const lum = () => { const d = thumbCx.getImageData(0, 0, 96, 96).data; let sum = 0; for(let i = 0; i < d.length; i += 16) sum += d[i] + d[i+1] + d[i+2]; return sum; };
   try {
@@ -4804,7 +4896,7 @@ function makeThumbs(){
       const m = parseInt(b.dataset.m, 10);
       if(!(m >= 0)) return;
       const d = MODE_DEFAULTS[String(m)] || {};
-      st.mode = m; st.art = "off"; st.dir = 1; st.thermal = false;
+      st.mode = m; st.art = "off"; st.dir = 1; st.thermal = false; st.film = false;
       for(const k in SLIDERS) st[k] = d[k] === undefined ? 0 : d[k];
       let best = -1, url = "";
       for(const t of (m === 28 ? [0.15, 0.6, 1.3, 2.1, 2.9] : [3.0])){      // Burst: keep the moment with the most light
@@ -4842,6 +4934,17 @@ document.getElementById("thermalSw").addEventListener("click", e => { const b = 
 document.getElementById("fxThermal").addEventListener("input", e => { st.thermalAmt = parseFloat(e.target.value); thermalSync(); });
 document.getElementById("fxModes").addEventListener("click", e => { if(e.target.closest("button")) setTimeout(thermalSync, 0); });   // the label follows the effect: n/a with Feedback
 
+// ── Film burn: a layer of light leaks over the whole frame ──
+function filmSync(){
+  const sw = document.getElementById("filmSw"), sl = document.getElementById("fxFilm");
+  sw.querySelectorAll("button").forEach(b => b.classList.toggle("on", (b.dataset.fb === "1") === st.film));
+  sl.disabled = !st.film; sl.style.opacity = st.film ? "" : "0.35"; sl.value = st.filmAmt;
+  document.getElementById("fxvFilm").textContent = st.film ? Math.round(st.filmAmt*100) + "%" : "Off";
+  if(!animId) draw();
+}
+document.getElementById("filmSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; st.film = b.dataset.fb === "1"; filmSync(); });
+document.getElementById("fxFilm").addEventListener("input", e => { st.filmAmt = parseFloat(e.target.value); filmSync(); });
+
 // ── Entrances: small switches for the text entrance and the Sleeve opening ──
 function introSync(){
   document.querySelectorAll("#txtIntroSw button").forEach(b => b.classList.toggle("on", (b.dataset.ti === "1") === TXT.intro));
@@ -4867,6 +4970,7 @@ function lookGet(){
   o.rpm = S.rpm; o.rotDir = S.rotDir; o.size = Math.round(S.vinylPct*100); o.bg = S.bgColor;
   o.txtStyle = TXT.style; o.txtSize = TXT.size;
   o.thermal = st.thermal ? st.thermalAmt : 0;
+  o.film = st.film ? st.filmAmt : 0;
   o.introText = TXT.intro; o.introSleeve = st.introSleeve; o.introFx = st.introFx;
   return o;
 }
@@ -4887,6 +4991,9 @@ function lookSet(o){
   const th = typeof o.thermal === "number" ? o.thermal : 0;      // looks saved before Thermal existed have it off
   st.thermal = th > 0; if(th > 0) st.thermalAmt = Math.max(0.1, Math.min(1, th));
   thermalSync();
+  const fb = typeof o.film === "number" ? o.film : 0;            // looks saved before Film burn existed have it off
+  st.film = fb > 0; if(fb > 0) st.filmAmt = Math.max(0.1, Math.min(1, fb));
+  filmSync();
   TXT.intro = o.introText !== false; st.introSleeve = o.introSleeve !== false; st.introFx = o.introFx !== false;   // looks saved before the switches existed have them on
   introSync();
   if(!animId) draw();
@@ -4996,7 +5103,6 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     "6":  { n:"Tunnel",   g:"B", d:{ swirl:"rotation of the tunnel", scale:"repeats around the tunnel", warp:"wobble of the walls" } },
     "7":  { n:"Kaleido",  g:"B", d:{ scale:"number of mirrored segments", swirl:"zoom of the pattern", warp:"organic wobble" } },
     "8":  { n:"Glitch",   g:"B", d:{ warp:"how far the rows jump", streak:"color split", scale:"thinner rows as it rises" } },
-    "9":  { n:"Spectrum", g:"S", audio:1, d:{ swirl:"height of the bars", scale:"size of the centre ring" } },
     "10": { n:"Droste",   g:"B", d:{ swirl:"twist of the spiral", scale:"zoom between levels", warp:"jitter" } },
     "12": { n:"Liquid",   g:"B", d:{ warp:"how strongly it flows", scale:"size of the ripples" } },
     "16": { n:"Feedback", g:"B", d:{ streak:"speed of the fall", swirl:"how long the echoes last", scale:"size of the source window", warp:"wobble of the spin" } },
@@ -5190,9 +5296,17 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   on("#fxIntroSw", "click", e => { if (e.target.closest("button")) later(fxIntroHint); });
   on("#txtIntroSw", "click", e => { if (e.target.closest("button")) later(txtIntroHint); });
   on("#sleeveIntroSw", "click", e => { if (e.target.closest("button")) later(sleeveIntroHint); });
+  function filmHint(){
+    const isOn = !!document.querySelector('#filmSw [data-fb="1"].on'), pct = Math.round(parseFloat(document.getElementById("fxFilm").value)*100);
+    if (!isOn) return "Film burn off \u2192 no light leaks over the frame.";
+    const loop = !document.querySelector('#fxRender [data-r="full"].on') && !!FXI[modeNow()] && modeNow() !== "28";
+    return "Film burn " + pct + "% \u2192 light leaks flicker at random over the whole frame, artwork included, all the time, plus hairs and dust. Works with any effect." + (loop ? " On Fast loop the flicker repeats with the loop." : "");
+  }
+  on("#filmSw", "click", e => { if (e.target.closest("button")) later(filmHint); });
+  on("#fxFilm", "input", () => later(filmHint));
   on("#thermalSw", "click", e => { if (e.target.closest("button")) later(thermalHint); });
   on("#fxThermal", "input", () => later(thermalHint));
-  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, thermalHint, txtIntroHint, sleeveIntroHint, fxIntroHint, playOpenHint, modes: Object.keys(FXI) };   // for checks from the console
+  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, thermalHint, filmHint, txtIntroHint, sleeveIntroHint, fxIntroHint, playOpenHint, modes: Object.keys(FXI) };   // for checks from the console
 })();
 
 // Scroll wheel over the video forwards to the menu, so the preview never moves
