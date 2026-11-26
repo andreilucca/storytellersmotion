@@ -835,7 +835,7 @@
         <button class="fx-btn" data-m="30" title="Living filaments growing out of the rim of the disc, like mycelium or slow lightning: they grow out, glow at the front and draw back, while light travels along the stems. Loops exactly with every disc turn. Warp = how much they curl, Streak = how fine they are, Scale = density, Swirl = cold light, artwork colors, then iridescent.">Tendril</button>
         <button class="fx-btn" data-m="31" title="Seven fine orbits around the disc, each tipped over at its own angle and turning against its neighbour, with a small planet and its trail on every one. Loops exactly with every disc turn. Warp = how far the orbits are tipped, Streak = trail length and line weight, Scale = spacing, Swirl = white lines, then artwork colors.">Orbits</button>
         <button class="fx-btn" data-m="32" title="Film burn: light leaks flicker over the whole frame like the end of a film roll, artwork included, on a plain background. Red, orange, yellow, green and blue light comes and goes at random, with hairs and dust. Speed = how fast it flickers, Warp = how strong the light is, Scale = size of the leaks, Streak = hairs and dust, Swirl = colors from the Palette instead of film colors.">Film burn</button>
-        <button class="fx-btn" data-m="33" title="Thermal: the artwork seen through a heat camera. Brightness becomes temperature, from black and indigo through magenta and orange to yellow and white. The heat breathes, waves travel outward, the colors drift hotter and colder, and a scan line sweeps the frame. Loops exactly with every disc turn. Warp = heat haze, Streak = scan line, Swirl = how far the colors drift, Scale = size of the heat bands.">Thermal</button>
+        <button class="fx-btn" data-m="33" title="Thermal: the artwork seen through a heat camera, from black and indigo through magenta and orange to yellow and white. It never settles and never repeats: every few seconds it glides to a new random reading of the picture, with heat waves, hot spots that swell and fade, a drifting temperature field, and hot and cold swapping now and then. Warp = twist and heat haze, Streak = hot spots, Swirl = how far it runs hotter or colder, Scale = size of the heat bands.">Thermal</button>
       </div>
       <div class="fx-grid2" id="fxDirs" style="margin-top:6px">
         <button class="fx-btn on" data-d="1">&#10227; Forward</button>
@@ -912,7 +912,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b54 · 2026-11-26 · test build: Film burn and Thermal are effects of their own in the grid, steered by Effect settings</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b55 · 2026-11-26 · test build: Thermal without the scan line, gliding between random readings of the picture, never repeating</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2885,28 +2885,48 @@ vec3 background(vec2 uv, float t, float aspect){
   }
 
   if(uMode == 33){
-    // Thermal → the artwork seen through a heat camera. Brightness is read as temperature and drawn
-    // in heat colors: black, indigo, magenta, red, amber, yellow, white. The picture is alive: the
-    // heat breathes as a whole, waves travel outward from the centre, the colors drift hotter and
-    // colder, haze makes the air shimmer and a scan line sweeps the frame. Everything is driven by
-    // the disc angle in whole-number multiples, so it loops exactly with every turn.
-    float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/16.0 + 0.5));   // whole cycles per disc turn; about 16 s each at the default Speed
-    float ph = uAngle*k*uDir;
+    // Thermal → the artwork seen through a heat camera, drawn in heat colors: black, indigo, magenta,
+    // red, amber, yellow, white. It never settles and never repeats: every six seconds or so it is
+    // on its way to a new, randomly drawn reading of the picture, and it glides there without a cut.
+    // A reading decides what counts as hot (brightness, warm colors or strong colors, in any mix),
+    // whether hot and cold swap, how hot the whole frame runs, the contrast, where heat waves start,
+    // where hot spots swell, how a slow temperature field lies across the frame, how the picture is
+    // twisted and zoomed, and how wide the heat bands are. Nothing sweeps across the frame.
+    float sg = t/6.0, si = floor(sg), sf = fract(sg);
+    float wq = sf*sf*sf*(sf*(6.0*sf - 15.0) + 10.0);             // glide from this reading to the next
+    #define TS(k) mix(fract(sin(si*12.9898 + (k)*78.233)*43758.5453), fract(sin((si + 1.0)*12.9898 + (k)*78.233)*43758.5453), wq)
     vec2 c = uv - 0.5; c.x *= aspect;
-    float r = length(c);
-    vec2 dr = vec2(cos(ph), sin(ph))*0.35;                        // the haze drifts on a circle, so it comes back to where it started
-    float hz1 = fbm(uv*vec2(3.0, 5.0) + dr) - 0.5, hz2 = fbm(uv*vec2(5.0, 3.0) - dr + 4.7) - 0.5;
-    vec2 p = uv + vec2(hz1, hz2)*uWarp*0.11;                      // Warp = heat haze
+    // the picture itself moves a little: twisted around a wandering point and zoomed, plus heat haze
+    vec2 tc = (vec2(TS(1.0), TS(2.0)) - 0.5)*vec2(aspect, 1.0)*0.7;
+    float tr = length(c - tc);
+    float ta = (TS(3.0) - 0.5)*1.6*uWarp*exp(-tr*2.4);            // Warp = how far the picture is twisted and shimmers
+    vec2 d0 = c - tc; d0 = vec2(d0.x*cos(ta) - d0.y*sin(ta), d0.x*sin(ta) + d0.y*cos(ta));
+    vec2 p = (tc + d0)/mix(0.92, 1.14, TS(4.0)); p.x /= aspect; p += 0.5;
+    float hz1 = fbm(uv*vec2(3.0, 5.0) + vec2(t*0.07, -t*0.05)) - 0.5, hz2 = fbm(uv*vec2(5.0, 3.0) + vec2(-t*0.06, t*0.08) + 4.7) - 0.5;
+    p += vec2(hz1, hz2)*uWarp*0.11;
     vec3 src = texture2D(uTex, mirror(p), 1.2).rgb;               // read soft, like a real sensor
-    float h = clamp((dot(src, vec3(0.299, 0.587, 0.114)) - uArtRange.x)/max(uArtRange.y - uArtRange.x, 0.04), 0.0, 1.0);   // auto levels: dark, pale or flat covers still use the whole heat scale
-    h = 0.04 + 0.90*h*h*(3.0 - 2.0*h);
-    h += 0.09*sin(ph*2.0) + 0.06*sin(r*13.0 - ph*4.0);            // the whole picture breathes, and waves move outward
-    float sy = fract(ph/6.28318*2.0);                             // scan line: two passes per cycle
-    float sl = exp(-abs(uv.y - sy)*80.0);
-    h += uStreak*0.40*sl;                                         // Streak = scan line; it heats what it crosses
-    h += uSwirl*0.30*sin(ph);                                     // Swirl = how far the colors drift hotter and colder
-    float nb = 11.0/uScale, fb = fract(h*nb);                     // Scale = size of the heat bands
-    float x = clamp(mix(h, (floor(h*nb) + smoothstep(0.30, 0.70, fb))/nb, 0.65), 0.0, 1.0);
+    // three ways to read temperature from the picture
+    float L  = clamp((dot(src, vec3(0.299, 0.587, 0.114)) - uArtRange.x)/max(uArtRange.y - uArtRange.x, 0.04), 0.0, 1.0);   // brightness, on the artwork's own range
+    float mxc = max(src.r, max(src.g, src.b)), mnc = min(src.r, min(src.g, src.b));
+    float Wm = clamp(0.5 + (src.r - max(src.g, src.b))*0.8 + (src.r - src.b)*0.2, 0.0, 1.0);       // warm colors are hot, cool colors are cold
+    float Sa = (mxc - mnc)/max(mxc, 0.05);                                                         // strong colors are hot, greys are cold
+    float wl = 0.40 + 0.60*TS(5.0), ww = 1.1*TS(6.0)*smoothstep(0.03, 0.20, Sa), ws = 0.8*TS(7.0);
+    float h = (wl*L + ww*Wm + ws*Sa)/(wl + ww + ws);
+    h = 0.5 + (h - 0.5)*mix(0.9, 1.7, TS(8.0));                   // contrast
+    h = mix(h, 1.0 - h, smoothstep(0.76, 0.90, TS(9.0)));         // now and then hot and cold swap
+    h += (TS(10.0) - 0.5)*0.55*uSwirl;                            // Swirl = how far the whole frame runs hotter or colder
+    // heat waves from a wandering source
+    vec2 wc = (vec2(TS(11.0), TS(12.0)) - 0.5)*vec2(aspect, 1.0)*0.9;
+    h += 0.085*TS(13.0)*sin(length(c - wc)*mix(7.0, 19.0, TS(14.0)) - t*1.3);
+    // hot spots that swell and fade (Streak = how strong they are)
+    vec2 b1 = (vec2(TS(15.0), TS(16.0)) - 0.5)*vec2(aspect, 1.0), b2 = (vec2(TS(17.0), TS(18.0)) - 0.5)*vec2(aspect, 1.0);
+    float bl = TS(19.0)*exp(-pow(length(c - b1)/mix(0.16, 0.42, TS(20.0)), 2.0)) + TS(21.0)*exp(-pow(length(c - b2)/mix(0.12, 0.34, TS(22.0)), 2.0));
+    h += bl*uStreak*1.3*(0.75 + 0.25*sin(t*2.1 + TS(23.0)*6.0));
+    // a slow temperature field lying across the frame
+    h += (fbm(c*mix(1.2, 2.6, TS(24.0)) + vec2(TS(25.0), TS(26.0))*9.0 + t*0.04) - 0.5)*0.50*TS(27.0);
+    h = clamp(0.04 + 0.92*h, 0.0, 1.0);
+    float nb = 11.0/uScale*mix(0.6, 1.7, TS(28.0)), fb = fract(h*nb);   // Scale = size of the heat bands
+    float x = clamp(mix(h, (floor(h*nb) + smoothstep(0.30, 0.70, fb))/nb, mix(0.25, 0.85, TS(29.0))), 0.0, 1.0);
     vec3 th = x < 0.18 ? mix(vec3(0.0, 0.0, 0.04), vec3(0.10, 0.02, 0.45), x/0.18)
             : x < 0.38 ? mix(vec3(0.10, 0.02, 0.45), vec3(0.58, 0.03, 0.55), (x - 0.18)/0.20)
             : x < 0.58 ? mix(vec3(0.58, 0.03, 0.55), vec3(0.96, 0.20, 0.12), (x - 0.38)/0.20)
@@ -2914,7 +2934,8 @@ vec3 background(vec2 uv, float t, float aspect){
             : x < 0.92 ? mix(vec3(1.0, 0.66, 0.05), vec3(1.0, 0.95, 0.45), (x - 0.78)/0.14)
             :            mix(vec3(1.0, 0.95, 0.45), vec3(1.0, 1.0, 0.92), (x - 0.92)/0.08);
     th *= 0.90 + 0.10*smoothstep(0.0, 0.12, abs(fb - 0.5)*2.0 - 0.02);   // a fine dark line where one band meets the next
-    col = th + vec3(1.0, 0.92, 0.75)*sl*uStreak*0.30;
+    col = th;
+    #undef TS
   }
 
   col *= 1.0 + uBeatBg*0.25;   // the background breathes with the Beat dial
@@ -5119,7 +5140,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     "30": { n:"Tendril",  g:"A", loop:1, rec:1, d:{ warp:"how much they curl", streak:"how fine they are", scale:"density", swirl:"cold light, artwork colors, then iridescent", speed:"speed of the growth" } },
     "31": { n:"Orbits",   g:"A", loop:1, rec:1, d:{ warp:"tilt of the orbits", streak:"trail length and line weight", scale:"spacing of the orbits", swirl:"white lines to artwork colors", speed:"speed of the system" } },
     "32": { n:"Film burn", g:"B", over:1, d:{ warp:"how strong the light is", scale:"size of the leaks", streak:"hairs and dust", swirl:"colors from the Palette instead of film colors", speed:"how fast it flickers" } },
-    "33": { n:"Thermal",  g:"B", loop:1, d:{ swirl:"how far the colors drift hotter and colder", streak:"the scan line", warp:"heat haze", scale:"size of the heat bands" } }
+    "33": { n:"Thermal",  g:"B", d:{ streak:"hot spots that swell and fade", swirl:"how far the frame runs hotter or colder", warp:"twist and heat haze", scale:"size of the heat bands", speed:"how fast it moves on to the next reading" } }
   };
   const LABEL = { speed:"Speed", warp:"Warp", streak:"Streak", swirl:"Swirl", scale:"Scale", trail:"Trails", ca:"Aberration", glow:"Glow", grain:"Grain", vig:"Vignette" };
   const FINISH = {
