@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b53 (2026-11-26)**
+**Current version: WEB v7.0-b54 (2026-11-26)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -24,10 +24,10 @@ no watermark, no account. Your files never leave your device.
     An optional **Label image** puts a different picture on the centre label,
     for example the Side A artwork.
   - **Off**: no artwork layer, the background effect fills the whole frame.
-- **Effects engine (WebGL)**: 21 animated background effects (Melt, Vortex,
+- **Effects engine (WebGL)**: 23 animated background effects (Melt, Vortex,
   Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom,
   VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
-  Cymatics, Burst, Eclipse, Tendril, Orbits) with per-effect settings, palette editing, and
+  Cymatics, Burst, Eclipse, Tendril, Orbits, Film burn, Thermal) with per-effect settings, palette editing, and
   forward and reverse direction. Colors come from the artwork.
 - **Every effect has its own look**: selecting an effect loads its full
   default look, including the finishing dials. Reset restores that look.
@@ -54,16 +54,20 @@ no watermark, no account. Your files never leave your device.
 - **Play opening** (Artwork tab): plays the start of the video in the
   preview exactly as Full render exports it. It also plays when one of the
   entrance switches is flipped.
-- **Thermal**: a color layer over any effect (Effects tab). The brightness
-  of the effect becomes cold to hot color; the cover, the record and the
-  text keep their own colors. On or Off, with an intensity slider. Saved in
-  presets. Not available with Feedback.
-- **Film burn**: light leaks that flicker over the whole frame like the end
-  of a film roll (Effects tab): red, orange, yellow, green and blue light
-  coming and going at random all the time, most of it faint, some of it
-  burning hot, plus hairs and dust. It lies over the artwork too and works
-  with any effect, or with none. On or Off, with an intensity slider.
-  Saved in presets.
+- **Film burn** (an effect in the grid): light leaks that flicker over the
+  whole frame like the end of a film roll, your picture included, on a
+  plain background. Red, orange, yellow, green and blue light comes and
+  goes at random all the time, most of it faint, some of it burning hot,
+  plus hairs and dust. Speed = how fast it flickers, Warp = how strong the
+  light is, Scale = size of the leaks, Streak = hairs and dust, Swirl =
+  colors from the Palette instead of film colors.
+- **Thermal** (an effect in the grid): the artwork seen through a heat
+  camera, from black and indigo through magenta and orange to yellow and
+  white, using the full heat scale on any cover. The heat breathes, waves
+  travel outward, the colors drift hotter and colder and a scan line
+  sweeps the frame. Loops exactly with the disc. Warp = heat haze, Streak
+  = scan line, Swirl = how far the colors drift, Scale = size of the heat
+  bands.
 - **Presets and Random**: Save keeps the whole look under a name (artwork
   mode, effect and its dials, disc speed and direction, photo size,
   background color, text style). Presets live in your own browser. Random
@@ -198,7 +202,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b53 · 2026-11-14`.
+  `Storytellers Motion · WEB v7.0-b54 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
