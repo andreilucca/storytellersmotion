@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b48 (2026-11-14)**
+**Current version: WEB v7.0-b53 (2026-11-26)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -24,9 +24,9 @@ no watermark, no account. Your files never leave your device.
     An optional **Label image** puts a different picture on the centre label,
     for example the Side A artwork.
   - **Off**: no artwork layer, the background effect fills the whole frame.
-- **Effects engine (WebGL)**: 23 animated background effects (Melt, Vortex,
-  Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom, Spectrum,
-  Reactor, VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
+- **Effects engine (WebGL)**: 21 animated background effects (Melt, Vortex,
+  Ripple, Tunnel, Kaleido, Glitch, Droste, Liquid, Bloom,
+  VHS, Burn, Halftone, Slices, Feedback, Twinspin, Depth 3D,
   Cymatics, Burst, Eclipse, Tendril, Orbits) with per-effect settings, palette editing, and
   forward and reverse direction. Colors come from the artwork.
 - **Every effect has its own look**: selecting an effect loads its full
@@ -58,6 +58,12 @@ no watermark, no account. Your files never leave your device.
   of the effect becomes cold to hot color; the cover, the record and the
   text keep their own colors. On or Off, with an intensity slider. Saved in
   presets. Not available with Feedback.
+- **Film burn**: light leaks that flicker over the whole frame like the end
+  of a film roll (Effects tab): red, orange, yellow, green and blue light
+  coming and going at random all the time, most of it faint, some of it
+  burning hot, plus hairs and dust. It lies over the artwork too and works
+  with any effect, or with none. On or Off, with an intensity slider.
+  Saved in presets.
 - **Presets and Random**: Save keeps the whole look under a name (artwork
   mode, effect and its dials, disc speed and direction, photo size,
   background color, text style). Presets live in your own browser. Random
@@ -99,7 +105,7 @@ takes 60 seconds, so:
 - On a full song, Fast loop renders a 60 second loop instead of a 12 second
   one, so the export takes longer than at higher speeds.
 
-Effects marked **FULL** (Vortex, Ripple, Tunnel, Kaleido, Spectrum, Feedback,
+Effects marked **FULL** (Vortex, Ripple, Tunnel, Kaleido, Feedback,
 Depth 3D) rotate or evolve continuously and need Export render:
 Full render on full songs. The app reminds you with a toast.
 
@@ -192,7 +198,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b48 · 2026-11-14`.
+  `Storytellers Motion · WEB v7.0-b53 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
