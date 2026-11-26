@@ -421,19 +421,13 @@
   header { gap: 28px; }
   .logo { flex-shrink: 0; }
   .tagline { flex: 1 1 auto; min-width: 0; max-width: none; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-  /* The hint card: a label names what the hint is about, the sentence stands in readable type,
-     and an effect gets two more rows: how it is best used, and what each of its dials does. */
-  #fxHints { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; min-height: 58px; white-space: normal; overflow: visible; line-height: 1.3; transition: opacity .25s, transform .25s; }
-  #fxHints.h-out { opacity: 0; transform: translateY(4px); }
-  #fxHints .h-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; max-width: 100%; min-width: 0; white-space: nowrap; }
-  #fxHints .h-subj { flex: none; font-size: 0.60rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #86c7a2; background: rgba(47,154,92,0.13); border: 1px solid rgba(47,154,92,0.45); border-radius: 5px; padding: 4px 9px 3px; }
-  #fxHints .h-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; color: #dcdcd6; }
-  #fxHints.h-dim .h-main { color: #b9b9b3; }
-  #fxHints .h-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 0.76rem; color: #9c9c97; }
-  #fxHints .h-k { flex: none; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #c9a36a; }
-  #fxHints .h-sub b { font-weight: 600; color: #cfcfc9; }
-  #fxHints .h-sub i { font-style: normal; opacity: 0.4; margin: 0 7px; }
-  #fxHints .h-more { opacity: 0.7; }
+  /* The hint: one quiet row. The name of what it is about in soft white, then the sentence in grey,
+     both in the plain interface font at normal weight. Nothing else. */
+  #fxHints { display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; white-space: nowrap; overflow: hidden; line-height: 1.4; font-weight: 400; letter-spacing: 0; transition: opacity .25s; }
+  #fxHints.h-out { opacity: 0; }
+  #fxHints .h-subj { flex: none; font-size: 0.86rem; font-weight: 500; color: #d2d2cc; }
+  #fxHints .h-main { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 0.86rem; color: #94948f; }
+  #fxHints.h-dim .h-subj { color: #b4b4ae; }
   /* ── Panel layout: tabs, effect thumbnails, Record always in view ── */
   .lay-tabs { display: none; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 6; background: var(--surface); flex-shrink: 0; }
   .lay-tabs button { all: unset; cursor: pointer; text-align: center; padding: 13px 0 11px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #777; border-bottom: 2px solid transparent; transition: color .15s; }
@@ -925,7 +919,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b56 · 2026-11-27 · test build: hint card with a label, a Best with row and a Dials row; Thermal marked FULL</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b57 · 2026-11-27 · test build: hint back to one quiet row, an effect says only what it goes best with</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -5208,8 +5202,8 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     }
     return head;
   }
-  // How an effect is best used, from the same facts the fit sentence uses: what it is built around,
-  // whether it needs a song, and whether it repeats on a looped file.
+  // An effect's hint says only what it goes best with, from the facts in the table: what it is
+  // built around, whether it needs a song, and whether it repeats on a looped file.
   function bestClause(m, f){
     const p = [];
     if (f.over) p.push("Card or Sleeve on a dark Background");
@@ -5217,18 +5211,15 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     else if (f.g === "B") p.push("Card, Sleeve, or Disc at Photo Size 70%");
     else p.push("any Artwork mode");
     if (f.audio) p.push("a song loaded");
-    const badge = document.querySelector('#fxModes .fx-btn[data-m="' + m + '"] .fx-badge');
     if (m === "28") p.push("always exported as Full render");
-    else if (badge) p.push("Full render for a whole song");
-    else if (f.loop) p.push("Fast loop, it loops exactly");
-    else p.push("Fast loop or Full render");
+    else if (document.querySelector('#fxModes .fx-btn[data-m="' + m + '"] .fx-badge')) p.push("Full render for a whole song");
     return p.join(" \u00b7 ");
   }
   function fxParts(m){
     m = String(m);
     const f = FXI[m];
-    if (!f) return fxHint(m);
-    return { subj: f.n, main: cap(fitClause(m, f)), best: bestClause(m, f), dials: Object.keys(f.d).map(k => [LABEL[k], f.d[k]]) };
+    if (!f) return { subj: "Effect off", main: "A plain Background. Best with Vinyl and Clean text" };
+    return { subj: f.n, main: "Best with " + bestClause(m, f) };
   }
   function dialHint(k){
     if (k === "trail" && modeNow() === "32") return "Trails has no role in Film burn \u2192 its light is added after the echo, so it leaves no smear. It listens to Warp, Scale, Streak, Swirl and Speed.";
@@ -5286,28 +5277,12 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   function paint(msg){
     const h = parts(msg);
     el.textContent = "";
-    const r1 = node("div", "h-row");
-    if (h.subj) r1.appendChild(node("span", "h-subj", h.subj));
-    r1.appendChild(node("span", "h-main", h.main));
-    el.appendChild(r1);
-    if (h.best){ const r = node("div", "h-row"); r.appendChild(node("span", "h-k", "Best with")); r.appendChild(node("span", "h-sub", h.best)); el.appendChild(r); }
-    if (h.dials && h.dials.length){
-      const r = node("div", "h-row"), sp = node("span", "h-sub");
-      r.appendChild(node("span", "h-k", "Dials"));
-      h.dials.forEach((d, i) => {                                // one piece per dial, so the row can drop the last ones when the window is narrow
-        const it = node("span", "h-di"); it.dataset.n = d[0];
-        if (i) it.appendChild(node("i", "", "\u00b7"));
-        it.appendChild(node("b", "", d[0])); it.appendChild(document.createTextNode(" " + d[1]));
-        sp.appendChild(it);
-      });
-      r.appendChild(sp); el.appendChild(r);
-    }
+    if (h.subj) el.appendChild(node("span", "h-subj", h.subj));
+    el.appendChild(node("span", "h-main", h.main));
   }
-  let lastMsg = null;
-  window.__hintRepaint = () => { if (lastMsg !== null) paint(lastMsg); };   // the fitting below asks for this when the window changes size
   function show(msg, dim){
     el.classList.add("h-out");
-    setTimeout(()=>{ lastMsg = msg; paint(msg); el.classList.toggle("h-dim", !!dim); el.classList.remove("h-out"); }, 250);
+    setTimeout(()=>{ paint(msg); el.classList.toggle("h-dim", !!dim); el.classList.remove("h-out"); }, 250);
   }
   function rotate(){                                            // when idle: the hint of the current effect, then a general one, in turns
     clearInterval(rot);
@@ -5472,31 +5447,18 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   try { localStorage.removeItem("stm.layout"); localStorage.removeItem("stm.fold"); } catch (e) {}   // left over from the test builds with two looks
 })();
 
-// ── Hint card: every row stays on one line. A long row first gets slightly smaller type; the Dials
-//    row then drops its last dials and names them at the end (move one and its own hint shows). ──
+// ── Hint: one row only. A long sentence gets slightly smaller type before it is ever cut. ──
 (function(){
   const el = document.getElementById("fxHints"); if (!el) return;
-  const over = t => t.scrollWidth > t.clientWidth + 1;
   const fit = () => {
-    el.querySelectorAll(".h-row").forEach(row => {
-      const t = row.querySelector(".h-main, .h-sub"); if (!t) return;
-      t.style.fontSize = "";
-      let px = parseFloat(getComputedStyle(t).fontSize), guard = 0;
-      const min = t.classList.contains("h-main") ? 12 : 10.8;
-      while (over(t) && px > min && guard++ < 40) { px -= 0.4; t.style.fontSize = px.toFixed(1) + "px"; }
-      const items = Array.from(t.querySelectorAll(".h-di")), gone = [];
-      let more = t.querySelector(".h-more");
-      while (over(t) && items.length > 1) {
-        const it = items.pop(); gone.unshift(it.dataset.n); it.remove();
-        if (!more) { more = document.createElement("span"); more.className = "h-more"; t.appendChild(more); }
-        more.textContent = " \u00b7 + " + gone.join(", ");
-      }
-    });
-    el.title = Array.from(el.querySelectorAll(".h-main, .h-sub")).some(over) ? Array.from(el.querySelectorAll(".h-row")).map(r => r.textContent).join("\n") : "";   // if a row is still cut, the full text is in the tooltip
+    const t = el.querySelector(".h-main"), n = el.querySelector(".h-subj"); if (!t) return;
+    t.style.fontSize = ""; if (n) n.style.fontSize = "";
+    let px = parseFloat(getComputedStyle(t).fontSize), guard = 0;
+    while (t.scrollWidth > t.clientWidth + 1 && px > 10.5 && guard++ < 40) { px -= 0.4; t.style.fontSize = px.toFixed(1) + "px"; if (n) n.style.fontSize = px.toFixed(1) + "px"; }
+    el.title = t.scrollWidth > t.clientWidth + 1 ? el.textContent : "";     // if it is still cut, the full text is in the tooltip
   };
-  let busy = false;
-  new MutationObserver(() => { if (busy) return; busy = true; fit(); setTimeout(() => { busy = false; }, 0); }).observe(el, { childList: true, characterData: true, subtree: true });
-  window.addEventListener("resize", () => { if (window.__hintRepaint) window.__hintRepaint(); else fit(); });
+  new MutationObserver(fit).observe(el, { childList: true, characterData: true, subtree: true });
+  window.addEventListener("resize", fit);
   fit();
 })();
 </script>
