@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b54 (2026-11-26)**
+**Current version: WEB v7.0-b55 (2026-11-26)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -63,11 +63,13 @@ no watermark, no account. Your files never leave your device.
   colors from the Palette instead of film colors.
 - **Thermal** (an effect in the grid): the artwork seen through a heat
   camera, from black and indigo through magenta and orange to yellow and
-  white, using the full heat scale on any cover. The heat breathes, waves
-  travel outward, the colors drift hotter and colder and a scan line
-  sweeps the frame. Loops exactly with the disc. Warp = heat haze, Streak
-  = scan line, Swirl = how far the colors drift, Scale = size of the heat
-  bands.
+  white. It never settles and never repeats: every few seconds it glides
+  to a new random reading of the picture (what counts as hot: brightness,
+  warm colors or strong colors), with heat waves, hot spots that swell and
+  fade, a drifting temperature field, and hot and cold swapping now and
+  then. Nothing sweeps across the frame. Warp = twist and heat haze,
+  Streak = hot spots, Swirl = how far it runs hotter or colder, Scale =
+  size of the heat bands, Speed = how fast it moves to the next reading.
 - **Presets and Random**: Save keeps the whole look under a name (artwork
   mode, effect and its dials, disc speed and direction, photo size,
   background color, text style). Presets live in your own browser. Random
@@ -202,7 +204,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b54 · 2026-11-14`.
+  `Storytellers Motion · WEB v7.0-b55 · 2026-11-14`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
