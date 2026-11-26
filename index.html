@@ -449,12 +449,12 @@
   .preset-row select:focus { border-color: var(--accent); }
   .preset-row .fx-btn { padding: 0 11px; min-height: 32px; height: 32px; font-size: 0.66rem; }
   /* Text size: one small joined control at the right end of the heading, values in a muted orange */
-  #txtSize, #thermalSw, #filmSw, #txtIntroSw, #sleeveIntroSw, #fxIntroSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
-  #txtSize button, #thermalSw button, #filmSw button, #txtIntroSw button, #sleeveIntroSw button, #fxIntroSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
+  #txtSize, #txtIntroSw, #sleeveIntroSw, #fxIntroSw { float: right; display: inline-flex; margin-top: -3px; border: 1px solid #33291d; border-radius: 6px; overflow: hidden; }
+  #txtSize button, #txtIntroSw button, #sleeveIntroSw button, #fxIntroSw button { all: unset; cursor: pointer; padding: 2px 9px; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1.55;
                     text-transform: none; color: #a87840; border-left: 1px solid #33291d; transition: color .15s, background .15s; }
-  #txtSize button:first-child, #thermalSw button:first-child, #filmSw button:first-child, #txtIntroSw button:first-child, #sleeveIntroSw button:first-child, #fxIntroSw button:first-child { border-left: none; }
-  #txtSize button:hover, #thermalSw button:hover, #filmSw button:hover, #txtIntroSw button:hover, #sleeveIntroSw button:hover, #fxIntroSw button:hover { color: #cf9450; }
-  #txtSize button.on, #thermalSw button.on, #filmSw button.on, #txtIntroSw button.on, #sleeveIntroSw button.on, #fxIntroSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
+  #txtSize button:first-child, #txtIntroSw button:first-child, #sleeveIntroSw button:first-child, #fxIntroSw button:first-child { border-left: none; }
+  #txtSize button:hover, #txtIntroSw button:hover, #sleeveIntroSw button:hover, #fxIntroSw button:hover { color: #cf9450; }
+  #txtSize button.on, #txtIntroSw button.on, #sleeveIntroSw button.on, #fxIntroSw button.on { color: #e0a862; background: rgba(192,138,69,0.15); }
   .txt-models { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
   .txt-models span { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6f6f; padding-right: 4px; }
   .txt-models .fx-btn { padding: 6px 2px; min-height: 28px; font-size: 0.68rem; }
@@ -834,21 +834,13 @@
         <button class="fx-btn" data-m="29" title="A living nebula wrapped around the record: filaments, dust lanes and stars, a hot core, drops that break away, a flare once per orbit. Loops exactly with every disc turn. Warp = how far the gas folds into itself (six mirrored sectors at the top), Swirl = cold light, then artwork colors, then iridescent, Streak = filament sharpness, Scale = detail size, Speed = orbit speed.">Eclipse</button>
         <button class="fx-btn" data-m="30" title="Living filaments growing out of the rim of the disc, like mycelium or slow lightning: they grow out, glow at the front and draw back, while light travels along the stems. Loops exactly with every disc turn. Warp = how much they curl, Streak = how fine they are, Scale = density, Swirl = cold light, artwork colors, then iridescent.">Tendril</button>
         <button class="fx-btn" data-m="31" title="Seven fine orbits around the disc, each tipped over at its own angle and turning against its neighbour, with a small planet and its trail on every one. Loops exactly with every disc turn. Warp = how far the orbits are tipped, Streak = trail length and line weight, Scale = spacing, Swirl = white lines, then artwork colors.">Orbits</button>
+        <button class="fx-btn" data-m="32" title="Film burn: light leaks flicker over the whole frame like the end of a film roll, artwork included, on a plain background. Red, orange, yellow, green and blue light comes and goes at random, with hairs and dust. Speed = how fast it flickers, Warp = how strong the light is, Scale = size of the leaks, Streak = hairs and dust, Swirl = colors from the Palette instead of film colors.">Film burn</button>
+        <button class="fx-btn" data-m="33" title="Thermal: the artwork seen through a heat camera. Brightness becomes temperature, from black and indigo through magenta and orange to yellow and white. The heat breathes, waves travel outward, the colors drift hotter and colder, and a scan line sweeps the frame. Loops exactly with every disc turn. Warp = heat haze, Streak = scan line, Swirl = how far the colors drift, Scale = size of the heat bands.">Thermal</button>
       </div>
       <div class="fx-grid2" id="fxDirs" style="margin-top:6px">
         <button class="fx-btn on" data-d="1">&#10227; Forward</button>
         <button class="fx-btn" data-d="-1">&#10226; Reverse</button>
       </div>
-
-      <div class="fx-lbl" title="Redraws the effect in thermal colors: dark is violet, bright is yellow. The cover, the record and the text keep their own colors. Not available with Feedback.">Thermal <b id="fxvThermal" style="text-transform:none">Off</b>
-        <span id="thermalSw" title="Thermal on or off"><button data-th="0" class="on">Off</button><button data-th="1">On</button></span>
-      </div>
-      <div class="fx-row"><input type="range" id="fxThermal" min="0.1" max="1" step="0.05" value="1" disabled style="opacity:0.35"></div>
-
-      <div class="fx-lbl" title="Light leaks flicker over the whole frame like the end of a film roll: red, orange, yellow, green and blue light coming and going at random all the time, plus hairs and dust. It lies over the artwork too and works with any effect.">Film burn <b id="fxvFilm" style="text-transform:none">Off</b>
-        <span id="filmSw" title="Film burn on or off"><button data-fb="0" class="on">Off</button><button data-fb="1">On</button></span>
-      </div>
-      <div class="fx-row"><input type="range" id="fxFilm" min="0.1" max="1" step="0.05" value="1" disabled style="opacity:0.35"></div>
 
       <div class="fx-lbl">Effect settings <button class="fx-rst" id="fxRstFx">&#8634; reset</button></div>
       <div class="fx-lbl" style="margin-top:4px">Speed <b id="fxvSpeed">1</b></div>
@@ -920,7 +912,7 @@
 </main>
 
 <footer>
-  <div class="footer-note">Storytellers Motion · WEB v7.0-b53 · 2026-11-26 · test build: Film burn now flickers at random all the time, with no waiting and no calm</div>
+  <div class="footer-note">Storytellers Motion · WEB v7.0-b54 · 2026-11-26 · test build: Film burn and Thermal are effects of their own in the grid, steered by Effect settings</div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -2219,7 +2211,6 @@ uniform float uRev;       // seconds per disc revolution
 uniform float uShift;     // how far the whole picture is moved up, as a fraction of the frame height
 uniform float uSlide;     // Sleeve: 0 = the record is inside the cover, 1 = pulled out
 uniform float uFxIn;      // 0 = plain background, 1 = the effect everywhere; in between the effect grows outward from the record
-uniform float uThermal;   // 0 = off; above 0 the effect is redrawn in thermal colors, blended by this amount
 uniform float uFxSeq;     // 1 while a file with the Sleeve opening is rendered: the effect's own cycle starts when the effect appears
 uniform float uFxAge;     // seconds since the effect appeared in the Sleeve opening (very large when there is no opening)
 uniform float uFxA0;      // the disc angle at the moment the effect appears (0 when uFxSeq is 0)
@@ -2893,6 +2884,39 @@ vec3 background(vec2 uv, float t, float aspect){
     col *= mix(0.25, 1.0, smoothstep(R*0.90, R*1.0, r0));
   }
 
+  if(uMode == 33){
+    // Thermal → the artwork seen through a heat camera. Brightness is read as temperature and drawn
+    // in heat colors: black, indigo, magenta, red, amber, yellow, white. The picture is alive: the
+    // heat breathes as a whole, waves travel outward from the centre, the colors drift hotter and
+    // colder, haze makes the air shimmer and a scan line sweeps the frame. Everything is driven by
+    // the disc angle in whole-number multiples, so it loops exactly with every turn.
+    float k  = max(1.0, floor(uRev*(0.4 + uSpeed)/16.0 + 0.5));   // whole cycles per disc turn; about 16 s each at the default Speed
+    float ph = uAngle*k*uDir;
+    vec2 c = uv - 0.5; c.x *= aspect;
+    float r = length(c);
+    vec2 dr = vec2(cos(ph), sin(ph))*0.35;                        // the haze drifts on a circle, so it comes back to where it started
+    float hz1 = fbm(uv*vec2(3.0, 5.0) + dr) - 0.5, hz2 = fbm(uv*vec2(5.0, 3.0) - dr + 4.7) - 0.5;
+    vec2 p = uv + vec2(hz1, hz2)*uWarp*0.11;                      // Warp = heat haze
+    vec3 src = texture2D(uTex, mirror(p), 1.2).rgb;               // read soft, like a real sensor
+    float h = clamp((dot(src, vec3(0.299, 0.587, 0.114)) - uArtRange.x)/max(uArtRange.y - uArtRange.x, 0.04), 0.0, 1.0);   // auto levels: dark, pale or flat covers still use the whole heat scale
+    h = 0.04 + 0.90*h*h*(3.0 - 2.0*h);
+    h += 0.09*sin(ph*2.0) + 0.06*sin(r*13.0 - ph*4.0);            // the whole picture breathes, and waves move outward
+    float sy = fract(ph/6.28318*2.0);                             // scan line: two passes per cycle
+    float sl = exp(-abs(uv.y - sy)*80.0);
+    h += uStreak*0.40*sl;                                         // Streak = scan line; it heats what it crosses
+    h += uSwirl*0.30*sin(ph);                                     // Swirl = how far the colors drift hotter and colder
+    float nb = 11.0/uScale, fb = fract(h*nb);                     // Scale = size of the heat bands
+    float x = clamp(mix(h, (floor(h*nb) + smoothstep(0.30, 0.70, fb))/nb, 0.65), 0.0, 1.0);
+    vec3 th = x < 0.18 ? mix(vec3(0.0, 0.0, 0.04), vec3(0.10, 0.02, 0.45), x/0.18)
+            : x < 0.38 ? mix(vec3(0.10, 0.02, 0.45), vec3(0.58, 0.03, 0.55), (x - 0.18)/0.20)
+            : x < 0.58 ? mix(vec3(0.58, 0.03, 0.55), vec3(0.96, 0.20, 0.12), (x - 0.38)/0.20)
+            : x < 0.78 ? mix(vec3(0.96, 0.20, 0.12), vec3(1.0, 0.66, 0.05), (x - 0.58)/0.20)
+            : x < 0.92 ? mix(vec3(1.0, 0.66, 0.05), vec3(1.0, 0.95, 0.45), (x - 0.78)/0.14)
+            :            mix(vec3(1.0, 0.95, 0.45), vec3(1.0, 1.0, 0.92), (x - 0.92)/0.08);
+    th *= 0.90 + 0.10*smoothstep(0.0, 0.12, abs(fb - 0.5)*2.0 - 0.02);   // a fine dark line where one band meets the next
+    col = th + vec3(1.0, 0.92, 0.75)*sl*uStreak*0.30;
+  }
+
   col *= 1.0 + uBeatBg*0.25;   // the background breathes with the Beat dial
 
   vec2 dd = uv - 0.5;
@@ -2950,15 +2974,6 @@ void main(){
   float t = uTime*uSpeed;
   vec2 FC = gl_FragCoord.xy - vec2(0.0, uShift*uRes.y);     // the picture moves up to make room for the text line
   vec3 col = background(vUv - vec2(0.0, uShift), t, aspect);
-  if(uThermal > 0.0){
-    // Thermal: the brightness of the effect becomes cold to hot color. Only the effect is redrawn:
-    // the cover, the record and the text are added afterwards and keep their own colors.
-    float lumT = dot(col, vec3(0.299, 0.587, 0.114));
-    float x = clamp(pow(lumT, 0.75)*1.25, 0.0, 1.0);
-    vec3 c0 = vec3(0.01, 0.0, 0.05), c1 = vec3(0.20, 0.0, 0.55), c2 = vec3(0.85, 0.05, 0.35), c3 = vec3(1.0, 0.55, 0.05), c4 = vec3(1.0, 0.98, 0.80);
-    vec3 th = x < 0.25 ? mix(c0, c1, x*4.0) : x < 0.5 ? mix(c1, c2, (x - 0.25)*4.0) : x < 0.75 ? mix(c2, c3, (x - 0.5)*4.0) : mix(c3, c4, (x - 0.75)*4.0);
-    col = mix(col, th, uThermal);
-  }
   if(uFxIn < 1.0){
     // The effect grows out of the record: it is shown inside a soft circle centred on the record,
     // which starts under the rim and widens until it has covered the whole frame.
@@ -3230,7 +3245,7 @@ const U = {};
 gl.useProgram(progMain);
 ["uRes","uTime","uTex","uPrev","uMode","uSpeed","uWarp","uStreak","uSwirl","uScale","uDir","uTrail",
  "uPal","uPalN","uBgCol","uArt","uDiscR","uAngle","uBeat","uBeatBg","uDiscFx","uSpec","uDepth",
- "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide","uFxIn","uFxSeq","uFxA0","uFxAge","uThermal"]
+ "uHit","uHitEnv","uEl","uArtRange","uLay","uRev","uShift","uLabel","uHasLabel","uSlide","uFxIn","uFxSeq","uFxA0","uFxAge"]
   .forEach(n => U[n] = gl.getUniformLocation(progMain, n) || gl.getUniformLocation(progMain, n + "[0]"));
 const UCopy = gl.getUniformLocation(progCopy, "uScene");
 const UCopyCA = gl.getUniformLocation(progCopy, "uCA");
@@ -3453,7 +3468,7 @@ function applyPalette(pal, keepBase){
 }
 
 // ── state + per-effect slider defaults ──
-const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", thermal:false, thermalAmt:1, film:false, filmAmt:1, introSleeve:true, introFx:true, ca:0, glow:0, grain:0, vig:0,
+const st = {mode:-1, dir:1, art:"disc", sleeve:false, renderMode:"loop", introSleeve:true, introFx:true, ca:0, glow:0, grain:0, vig:0,
             speed:1, warp:0.35, streak:0.65, swirl:0.5, scale:1, trail:0, beat:0};
 const MODE_DEFAULTS = {
   "-1":{speed:1,   warp:0.35, streak:0.65, swirl:0.5, scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0},
@@ -3516,6 +3531,8 @@ document.getElementById("fxRender").addEventListener("click", e=>{
 function exportDurationSec(){
   return S.audioLoaded ? (S.trimEnd - S.trimStart) * S.audioDuration : S.silentDuration;
 }
+MODE_DEFAULTS["32"] = {speed:1,   warp:0.50, streak:0.30, swirl:0,   scale:1,   trail:0, ca:0, glow:0, grain:0, vig:0};      // Film burn
+MODE_DEFAULTS["33"] = {speed:1,   warp:0.40, streak:0.30, swirl:0.5, scale:1,   trail:0, ca:0, glow:0.15, grain:0, vig:0};   // Thermal
 const FX_NEEDS_FULL = {2:"Vortex",3:"Ripple",6:"Tunnel",7:"Kaleido",16:"Feedback",24:"Depth 3D"};
 let fxFullHintShown = false, fxBurstHintShown = false;
 document.getElementById("fxModes").addEventListener("click", e=>{
@@ -4221,7 +4238,6 @@ function render(W, H, angleDeg, tOverride){
   const fxSeq = fxInExport !== null;                           // a file with an opening is being rendered (the exporter decides)
   gl.uniform1f(U.uFxIn, fxSeq ? fxInExport : 1);               // with Sleeve the effect waits for the record
   gl.uniform1f(U.uFxSeq, fxSeq ? 1 : 0);
-  gl.uniform1f(U.uThermal, (st.thermal && st.mode >= 0 && st.mode !== 16) ? st.thermalAmt : 0);   // not with Feedback, which is built from its own previous frame
   gl.uniform1f(U.uFxA0, fxSeq ? fxA0Export : 0);
   gl.uniform1f(U.uFxAge, fxSeq ? Math.max(0, fxAgeExport) : 1e4);   // Eclipse and Orbits grow out of the record from this moment
   gl.uniform1f(U.uRev, 60/Math.max(S.rpm, 1));     // seconds per disc revolution (Eclipse ties its orbits to it)
@@ -4238,6 +4254,7 @@ function render(W, H, angleDeg, tOverride){
     gl.uniform1f(U.uHitEnv, hb.env);
     gl.uniform2f(U.uArtRange, artLo, artHi);
   }
+  if(st.mode === 33) gl.uniform2f(U.uArtRange, artLo, artHi);   // Thermal reads the artwork's own brightness range
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -4252,7 +4269,10 @@ function render(W, H, angleDeg, tOverride){
   gl.uniform1f(UCopyVig, st.vig);
   gl.uniform1f(UCopyTime, t);
   gl.uniform2f(UCopyRes, W, H);
-  const fl = st.film ? filmState(t, st.filmAmt) : FILM_NONE;      // film burn for this instant
+  // Film burn (effect 32) lives in this last pass, so its light lies over the artwork too. Its dials:
+  // Speed = flicker speed, Warp = strength of the light, Scale = size of the leaks, Streak = hairs and dust, Swirl = palette colors.
+  const fl = st.mode === 32 ? filmState(t, { speed: st.speed, light: st.warp*2*(fxSeq ? fxInExport : 1), size: st.scale, dust: st.streak/0.3, pal: st.swirl,
+                                              colors: currentPal.map(c => [c[0]/255, c[1]/255, c[2]/255]) }) : FILM_NONE;
   gl.uniform4fv(UFlm.uFlmA, fl.A); gl.uniform4fv(UFlm.uFlmB, fl.B); gl.uniform3fv(UFlm.uFlmCa, fl.ca); gl.uniform3fv(UFlm.uFlmCb, fl.cb);
   gl.uniform4fv(UFlm.uFlmP, fl.P); gl.uniform4fv(UFlm.uFlmH, fl.H); gl.uniform4fv(UFlm.uFlmH2, fl.H2);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -4298,25 +4318,37 @@ function filmLeak(id){                                        // one leak: how s
   };
   const pa = R(7) < 0.40 ? [0.2 + 0.6*R(8), 0.2 + 0.6*R(9)] : rim(10, 0.30), pb = rim(14, 0.20);
   return { S: cls === 0 ? FILM_S[0] + FILM_S[1]*R(4) : cls === 1 ? FILM_S[2] + FILM_S[3]*R(4) : FILM_S[4] + FILM_S[5]*R(4),
-           ca: FILM_COL[a], cb: FILM_COL[b], A: [pa[0], pa[1], 0.75 + 0.65*R(18)], B: [pb[0], pb[1], 0.55 + 0.55*R(19)],
+           ca: FILM_COL[a], cb: FILM_COL[b], pA: R(22), pB: R(23), A: [pa[0], pa[1], 0.75 + 0.65*R(18)], B: [pb[0], pb[1], 0.55 + 0.55*R(19)],
            wB: two ? 0.7 + 0.5*R(20) : 0, heat: (cls === 2 && a !== "red") ? 0.5 + 0.6*R(21) : (cls === 1 && a === "yellow") ? 0.5*R(21) : 0, nx: R(16)*40, ny: R(17)*40 };
 }
 const FILM_S = [0.05, 0.09, 0.14, 0.24, 0.37, 0.10];          // strength ranges: faint, medium, hot (start, span)
-const FILM_GAIN = [2.3, 1.5, 0.45];                            // leak A, leak B, even haze
-function filmState(t, amt){
-  const n = Math.floor(t*FILM_FPS), id = filmEvent(n);
+const FILM_GAIN = [2.3, 1.5, 0.45];                           // leak A, leak B, even haze
+// P steers it from the effect dials: speed (1 = film speed), light (1 = as measured), size (1 = as measured),
+// dust (1 = as measured), pal (0 = film colors, 1 = colors from the palette), colors (the palette, each color 0..1)
+function filmState(t, P){
+  const n = Math.floor(t*FILM_FPS*P.speed), id = filmEvent(n);
   const o = { A:[0,0,1,0], B:[0,0,1,0], ca:[0,0,0], cb:[0,0,0], P:[0,0,0,0], H:[0,0,0,0], H2:[0,0,0,0] };
-  if(id !== null){
-    const L = filmLeak(id), S = L.S*(0.45 + 0.55*fhash(n, 7))*amt;   // the same leak flickers from frame to frame while it lasts
-    o.A = [L.A[0], L.A[1], L.A[2], S*FILM_GAIN[0]]; o.B = [L.B[0], L.B[1], L.B[2], S*L.wB*FILM_GAIN[1]];
-    o.ca = L.ca; o.cb = L.cb; o.P = [S*FILM_GAIN[2], L.heat, L.nx, L.ny];
+  if(id !== null && P.light > 0){
+    const L = filmLeak(id), S = L.S*(0.45 + 0.55*fhash(n, 7))*P.light;   // the same leak flickers from frame to frame while it lasts
+    const fromPal = (film, pick) => {                         // film color, or a full-strength color from the palette
+      if(!(P.pal > 0) || !P.colors || !P.colors.length) return film;
+      const c = P.colors[Math.min(P.colors.length - 1, Math.floor(pick*P.colors.length))], mx = Math.max(c[0], c[1], c[2], 0.25);
+      return [film[0] + (c[0]/mx - film[0])*P.pal, film[1] + (c[1]/mx - film[1])*P.pal, film[2] + (c[2]/mx - film[2])*P.pal];
+    };
+    o.A = [L.A[0], L.A[1], L.A[2]*P.size, S*FILM_GAIN[0]]; o.B = [L.B[0], L.B[1], L.B[2]*P.size, S*L.wB*FILM_GAIN[1]];
+    o.ca = fromPal(L.ca, L.pA); o.cb = fromPal(L.cb, L.pB); o.P = [S*FILM_GAIN[2], L.heat*Math.min(1.6, 0.4 + 0.6*P.light), L.nx, L.ny];
   }
-  if(fhash(n, 40) < 0.09){                                    // a hair, for one film frame
+  if(fhash(n, 40) < 0.09*P.dust){                             // a hair, for one film frame
     o.H = [fhash(n, 41), fhash(n, 42), fhash(n, 43)*6.2832, (fhash(n, 44) - 0.5)*2.4];
-    o.H2[0] = 0.15 + 0.35*fhash(n, 45); o.H2[1] = (0.25 + 0.30*fhash(n, 46))*amt;
+    o.H2[0] = 0.15 + 0.35*fhash(n, 45); o.H2[1] = Math.min(0.9, (0.25 + 0.30*fhash(n, 46))*Math.max(1, P.dust));
   }
-  if(fhash(n, 50) < 0.30){ o.H2[2] = fhash(n, 51)*40; o.H2[3] = (0.5 + 0.4*fhash(n, 52))*amt; }   // dust
+  if(fhash(n, 50) < 0.30*P.dust){ o.H2[2] = fhash(n, 51)*40; o.H2[3] = Math.min(1, 0.5 + 0.4*fhash(n, 52)); }   // dust
   return o;
+}
+function filmShowTimes(){                                     // a few moments when a hot leak is on, for the thumbnail
+  const out = [];
+  for(let n = 0; n < 2000 && out.length < 6; n++){ const id = filmEvent(n); if(id !== null && filmLeak(id).S > 0.38 && fhash(n, 7) > 0.6) out.push((n + 0.5)/FILM_FPS); }
+  return out.length ? out : [3.0];
 }
 const FILM_NONE = { A:[0,0,1,0], B:[0,0,1,0], ca:[0,0,0], cb:[0,0,0], P:[0,0,0,0], H:[0,0,0,0], H2:[0,0,0,0] };
 
@@ -4888,7 +4920,7 @@ const thumbCv = document.createElement("canvas"); thumbCv.width = thumbCv.height
 const thumbCx = thumbCv.getContext("2d", { willReadFrequently: true });
 function makeThumbs(){
   if(!S.imageLoaded || !document.body.classList.contains("lay-new")) return;
-  const keys = ["mode","art","dir","thermal","film"].concat(Object.keys(SLIDERS)), keep = {};
+  const keys = ["mode","art","dir"].concat(Object.keys(SLIDERS)), keep = {};
   keys.forEach(k => keep[k] = st[k]);
   const lum = () => { const d = thumbCx.getImageData(0, 0, 96, 96).data; let sum = 0; for(let i = 0; i < d.length; i += 16) sum += d[i] + d[i+1] + d[i+2]; return sum; };
   try {
@@ -4896,13 +4928,13 @@ function makeThumbs(){
       const m = parseInt(b.dataset.m, 10);
       if(!(m >= 0)) return;
       const d = MODE_DEFAULTS[String(m)] || {};
-      st.mode = m; st.art = "off"; st.dir = 1; st.thermal = false; st.film = false;
+      st.mode = m; st.art = "off"; st.dir = 1;
       for(const k in SLIDERS) st[k] = d[k] === undefined ? 0 : d[k];
       let best = -1, url = "";
-      for(const t of (m === 28 ? [0.15, 0.6, 1.3, 2.1, 2.9] : [3.0])){      // Burst: keep the moment with the most light
+      for(const t of (m === 28 ? [0.15, 0.6, 1.3, 2.1, 2.9] : m === 32 ? filmShowTimes() : [3.0])){   // Burst and Film burn: keep the moment with the most light
         render(96, 96, 20, t);
         thumbCx.drawImage(glc, 0, 0, 96, 96);
-        const l = m === 28 ? lum() : 1;
+        const l = (m === 28 || m === 32) ? lum() : 1;
         if(l > best){ best = l; url = thumbCv.toDataURL("image/jpeg", 0.85); }
       }
       let im = b.querySelector("img.fx-thumb");
@@ -4921,29 +4953,6 @@ function scheduleThumbs(){
   clearTimeout(thumbsTimer);
   thumbsTimer = setTimeout(() => { if(thumbsDirty) makeThumbs(); }, 450);
 }
-
-// ── Thermal: a color layer over the effect ──
-function thermalSync(){
-  const sw = document.getElementById("thermalSw"), sl = document.getElementById("fxThermal");
-  sw.querySelectorAll("button").forEach(b => b.classList.toggle("on", (b.dataset.th === "1") === st.thermal));
-  sl.disabled = !st.thermal; sl.style.opacity = st.thermal ? "" : "0.35"; sl.value = st.thermalAmt;
-  document.getElementById("fxvThermal").textContent = !st.thermal ? "Off" : st.mode === 16 ? "n/a" : Math.round(st.thermalAmt*100) + "%";   // Feedback does not take Thermal
-  if(!animId) draw();
-}
-document.getElementById("thermalSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; st.thermal = b.dataset.th === "1"; thermalSync(); });
-document.getElementById("fxThermal").addEventListener("input", e => { st.thermalAmt = parseFloat(e.target.value); thermalSync(); });
-document.getElementById("fxModes").addEventListener("click", e => { if(e.target.closest("button")) setTimeout(thermalSync, 0); });   // the label follows the effect: n/a with Feedback
-
-// ── Film burn: a layer of light leaks over the whole frame ──
-function filmSync(){
-  const sw = document.getElementById("filmSw"), sl = document.getElementById("fxFilm");
-  sw.querySelectorAll("button").forEach(b => b.classList.toggle("on", (b.dataset.fb === "1") === st.film));
-  sl.disabled = !st.film; sl.style.opacity = st.film ? "" : "0.35"; sl.value = st.filmAmt;
-  document.getElementById("fxvFilm").textContent = st.film ? Math.round(st.filmAmt*100) + "%" : "Off";
-  if(!animId) draw();
-}
-document.getElementById("filmSw").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; st.film = b.dataset.fb === "1"; filmSync(); });
-document.getElementById("fxFilm").addEventListener("input", e => { st.filmAmt = parseFloat(e.target.value); filmSync(); });
 
 // ── Entrances: small switches for the text entrance and the Sleeve opening ──
 function introSync(){
@@ -4969,8 +4978,6 @@ function lookGet(){
   for(const k in SLIDERS) o[k] = st[k];
   o.rpm = S.rpm; o.rotDir = S.rotDir; o.size = Math.round(S.vinylPct*100); o.bg = S.bgColor;
   o.txtStyle = TXT.style; o.txtSize = TXT.size;
-  o.thermal = st.thermal ? st.thermalAmt : 0;
-  o.film = st.film ? st.filmAmt : 0;
   o.introText = TXT.intro; o.introSleeve = st.introSleeve; o.introFx = st.introFx;
   return o;
 }
@@ -4988,12 +4995,6 @@ function lookSet(o){
   if(o.bg && /^#[0-9a-f]{6}$/i.test(o.bg)){ const e = document.getElementById("bgColor"); e.value = o.bg; e.dispatchEvent(new Event("input")); e.dispatchEvent(new Event("change")); }
   if(o.txtStyle) clickIf('#txtStyle [data-ts="' + o.txtStyle + '"]');
   if(o.txtSize) clickIf('#txtSize [data-tz="' + o.txtSize + '"]');
-  const th = typeof o.thermal === "number" ? o.thermal : 0;      // looks saved before Thermal existed have it off
-  st.thermal = th > 0; if(th > 0) st.thermalAmt = Math.max(0.1, Math.min(1, th));
-  thermalSync();
-  const fb = typeof o.film === "number" ? o.film : 0;            // looks saved before Film burn existed have it off
-  st.film = fb > 0; if(fb > 0) st.filmAmt = Math.max(0.1, Math.min(1, fb));
-  filmSync();
   TXT.intro = o.introText !== false; st.introSleeve = o.introSleeve !== false; st.introFx = o.introFx !== false;   // looks saved before the switches existed have them on
   introSync();
   if(!animId) draw();
@@ -5116,7 +5117,9 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     "28": { n:"Burst",    g:"A", audio:1, d:{ speed:"how often it hits", warp:"power of each hit", swirl:"black and white to artwork colors", scale:"density", streak:"line weight and glow" } },
     "29": { n:"Eclipse",  g:"A", loop:1, rec:1, d:{ warp:"folding of the gas, kaleidoscope at the top", swirl:"cold light, artwork colors, then iridescent", streak:"sharpness of the filaments", scale:"size of the detail", speed:"speed of the orbit" } },
     "30": { n:"Tendril",  g:"A", loop:1, rec:1, d:{ warp:"how much they curl", streak:"how fine they are", scale:"density", swirl:"cold light, artwork colors, then iridescent", speed:"speed of the growth" } },
-    "31": { n:"Orbits",   g:"A", loop:1, rec:1, d:{ warp:"tilt of the orbits", streak:"trail length and line weight", scale:"spacing of the orbits", swirl:"white lines to artwork colors", speed:"speed of the system" } }
+    "31": { n:"Orbits",   g:"A", loop:1, rec:1, d:{ warp:"tilt of the orbits", streak:"trail length and line weight", scale:"spacing of the orbits", swirl:"white lines to artwork colors", speed:"speed of the system" } },
+    "32": { n:"Film burn", g:"B", over:1, d:{ warp:"how strong the light is", scale:"size of the leaks", streak:"hairs and dust", swirl:"colors from the Palette instead of film colors", speed:"how fast it flickers" } },
+    "33": { n:"Thermal",  g:"B", loop:1, d:{ swirl:"how far the colors drift hotter and colder", streak:"the scan line", warp:"heat haze", scale:"size of the heat bands" } }
   };
   const LABEL = { speed:"Speed", warp:"Warp", streak:"Streak", swirl:"Swirl", scale:"Scale", trail:"Trails", ca:"Aberration", glow:"Glow", grain:"Grain", vig:"Vignette" };
   const FINISH = {
@@ -5140,6 +5143,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   function fitClause(m, f){
     const art = artNow(), sleeve = sleeveNow();
     if (f.audio && !S.audioLoaded) return "moves with the music, so load a song first (Media).";
+    if (f.over) return art === "off" ? "lights the plain background: add an artwork mode to see it over your picture." : "lies over the whole frame, your picture included, on a plain background.";
     if (f.g === "A") {
       if (art === "off")  return "has a dark centre made for the record: set Artwork to Disc or Vinyl.";
       if (art === "card") return m === "29" ? "wraps a ring of light around the card." : "is built around a round record: Disc or Vinyl suits it better than Card.";
@@ -5171,6 +5175,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
     return head;
   }
   function dialHint(k){
+    if (k === "trail" && modeNow() === "32") return "Trails has no role in Film burn \u2192 its light is added after the echo, so it leaves no smear. It listens to Warp, Scale, Streak, Swirl and Speed.";
     if (FINISH[k]) return FINISH[k];
     const f = FXI[modeNow()];
     if (!f) return LABEL[k] + " \u2192 no effect is selected: pick one under Background effect.";
@@ -5238,9 +5243,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   show(GENERAL[0], true);
   rotate();
 
-  const thermalOn = () => !!document.querySelector('#thermalSw [data-th="1"].on');
-  const FEEDBACK_THERMAL = "Feedback \u2192 Thermal is on but does not apply here: this effect is built from its own previous frame. Every other effect takes Thermal.";
-  on("#fxModes", "click", e => { const b = e.target.closest("button"); if (b) later(() => (b.dataset.m === "16" && thermalOn()) ? FEEDBACK_THERMAL : fxHint(b.dataset.m)); });
+  on("#fxModes", "click", e => { const b = e.target.closest("button"); if (b) later(() => fxHint(b.dataset.m)); });
   on("#fxArt", "click", e => { if (e.target.closest("button")) later(artHint); });
   on("#fxVinylOpt", "click", e => { if (e.target.closest("button")) later(artHint); });
   on("#fxRender", "click", e => { const b = e.target.closest("button"); if (b) later(() => renderHint(b.dataset.r === "loop")); });
@@ -5261,14 +5264,6 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   on("#bgColor", "input", () => tip("Background \u2192 the color behind the artwork when the effect is Off. Your choice is remembered in this browser."));
   on("#imgInput", "change", () => setTimeout(() => tip("Artwork loaded \u2192 choose how it is shown in Artwork, then pick an effect: every thumbnail is drawn from your cover."), 900));
   on("#lblImgInput", "change", () => setTimeout(() => tip("Label image \u2192 this picture is on the record's label only; the cover and the colors of the effects still come from the main artwork."), 400));
-  function thermalHint(){
-    const m = modeNow(), f = FXI[m];
-    const isOn = !!document.querySelector('#thermalSw [data-th="1"].on'), pct = Math.round(parseFloat(document.getElementById("fxThermal").value) * 100);
-    if (!isOn) return "Thermal off \u2192 the effect keeps the colors it takes from the artwork.";
-    if (!f) return "Thermal \u2192 it recolors the effect, and no effect is selected: pick one under Background effect.";
-    if (m === "16") return "Thermal \u2192 not available with Feedback, which is built from its own previous frame. Pick another effect.";
-    return "Thermal " + pct + "% \u2192 the brightness of " + f.n + " becomes color: dark is violet, bright is yellow. Cover, record and text keep their colors." + (pct < 100 ? " Under 100% it blends with the effect's own colors." : "");
-  }
   function txtIntroHint(){
     if (!txtIntroOn()) return "Text entrance off \u2192 the text is in place from the first frame.";
     return "Text entrance on \u2192 on Full render the text fades in over two seconds, " + ((sleeveNow() && sleeveIntroOn()) ? "after the record has left the cover" : (fxIntroApplies() && fxIntroOn()) ? "after the effect has started" : "from the first second") + ". Fast loop shows it in place.";
@@ -5296,17 +5291,7 @@ return { canvas: glc, active, render: previewRender, ensureAudio, playOpening,
   on("#fxIntroSw", "click", e => { if (e.target.closest("button")) later(fxIntroHint); });
   on("#txtIntroSw", "click", e => { if (e.target.closest("button")) later(txtIntroHint); });
   on("#sleeveIntroSw", "click", e => { if (e.target.closest("button")) later(sleeveIntroHint); });
-  function filmHint(){
-    const isOn = !!document.querySelector('#filmSw [data-fb="1"].on'), pct = Math.round(parseFloat(document.getElementById("fxFilm").value)*100);
-    if (!isOn) return "Film burn off \u2192 no light leaks over the frame.";
-    const loop = !document.querySelector('#fxRender [data-r="full"].on') && !!FXI[modeNow()] && modeNow() !== "28";
-    return "Film burn " + pct + "% \u2192 light leaks flicker at random over the whole frame, artwork included, all the time, plus hairs and dust. Works with any effect." + (loop ? " On Fast loop the flicker repeats with the loop." : "");
-  }
-  on("#filmSw", "click", e => { if (e.target.closest("button")) later(filmHint); });
-  on("#fxFilm", "input", () => later(filmHint));
-  on("#thermalSw", "click", e => { if (e.target.closest("button")) later(thermalHint); });
-  on("#fxThermal", "input", () => later(thermalHint));
-  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, thermalHint, filmHint, txtIntroHint, sleeveIntroHint, fxIntroHint, playOpenHint, modes: Object.keys(FXI) };   // for checks from the console
+  window.SM_HINTS = { fxHint, dialHint, artHint, formatHint, renderHint, txtIntroHint, sleeveIntroHint, fxIntroHint, playOpenHint, modes: Object.keys(FXI) };   // for checks from the console
 })();
 
 // Scroll wheel over the video forwards to the menu, so the preview never moves
