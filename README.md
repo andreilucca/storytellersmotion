@@ -4,7 +4,7 @@
 
 Repository: https://github.com/andreilucca/storytellersmotion
 
-**Current version: WEB v7.0-b57 (2026-11-27)**
+**Current version: v7.0-b58 (2026-11-27)**
 
 Turn a cover and a song into a smooth, professional promo video: a spinning
 disc, a vinyl record, or a record sliding out of its sleeve, over an animated
@@ -102,6 +102,88 @@ no watermark, no account. Your files never leave your device.
   enough to serve on Auto quality.
 - **Background color**: dark by default (`#171616`). The color you pick is
   remembered in your own browser.
+
+## Stable effects: do not alter
+
+All 23 effects are final. The owner tested each one and accepted it exactly
+as it is in v7.0-b58. This section is a rule for anyone who works on this
+file, a person or an AI.
+
+**The rule**
+
+- Never rewrite, improve, sharpen, recolor, re-time or refactor an existing
+  effect, its default look, or the shared code it passes through (helper
+  functions, color grading, the finishing pass).
+- An effect changes only when the owner asks for a change to that effect,
+  by name. A general request ("make the effects better") is not that.
+- New work means new effects or new features beside the existing ones.
+- Every new build must prove it: the fingerprints below stay the same for
+  every effect that was not the subject of the request.
+- When a change to an effect is requested, keep the old version, and show
+  old and new side by side on the same artwork and settings before it
+  ships.
+
+**Why this rule exists**
+
+- 2026-11-13 and 14: the existing effects were "re-evaluated", and Vortex,
+  Melt, Ripple, Droste and Liquid were rewritten with sharpening, extra
+  contrast and painted light. They came out worse: hard edges, crushed
+  tones, loud color, less depth. The judging had been done on small still
+  frames, never next to the original.
+- 2026-11-16: a colleague noticed on the live app. The five effects were
+  put back to their original v6.9 code in b49 and checked pixel for pixel
+  against the original.
+- Tunnel (slower start), VHS (no black band) and Twinspin (twin galaxies)
+  were changed at the owner's request and are accepted as they are now.
+- Removed for good, do not bring back: Reactor (b50), Spectrum (b51), and
+  earlier Datamosh, Palette flow, Nebula, CRT, Dither, ASCII, Echo, Lasers,
+  Topographic, Warp, Pixel sort, Voronoi, Morphogen.
+- Added and accepted: Burst, Eclipse, Tendril, Orbits, Film burn, Thermal.
+
+**Fingerprints of v7.0-b58**
+
+A fingerprint is the first 12 characters of the SHA-256 of a piece of
+`index.html`, read as UTF-8 text. If one differs, that piece was changed.
+
+| Piece | How it is cut out | Fingerprint |
+|---|---|---|
+| Main shader | text between ``const FS = ` `` and the closing `` `; `` | `991c957377cb` |
+| Vertex shader | same, for `VS` | `e883cb9e218b` |
+| Finishing shader | same, for `FS_COPY` | `b02464588c62` |
+| Film burn logic | from the line `// ── FILM BURN` up to the line `// ── DETERMINISTIC GPU EXPORT` | `40d1c26d7add` |
+| Default looks | the `MODE_DEFAULTS` object plus the two `MODE_DEFAULTS["32"]` and `["33"]` lines | `47cf18326865` |
+
+Per effect: the block in the main shader from `if(uMode == N){` to its
+matching closing brace.
+
+| Effect | Id | Full render | Fingerprint |
+|---|---|---|---|
+| Melt | 0 |  | `f06371af7390` |
+| Vortex | 2 | FULL | `9ba80451ba3b` |
+| Ripple | 3 | FULL | `b5ab4fb38f97` |
+| Tunnel | 6 | FULL | `c2ab1bb1dfd7` |
+| Kaleido | 7 | FULL | `fbe97f2a81d6` |
+| Glitch | 8 |  | `53b23f583149` |
+| Droste | 10 |  | `e9cbc665a21a` |
+| Liquid | 12 |  | `75e2c2091a1d` |
+| Bloom | 4 |  | `74400b66b0ab` |
+| VHS | 17 |  | `c3721c3f167c` |
+| Burn | 18 |  | `677f2bd2dd55` |
+| Halftone | 19 |  | `cf50a3c7c4db` |
+| Slices | 20 |  | `2a42f671c781` |
+| Feedback | 16 | FULL | `19dc3c4107cd` |
+| Twinspin | 23 |  | `c5e157e149fa` |
+| Depth 3D | 24 | FULL | `a0828684e9bd` |
+| Cymatics | 25 |  | `34605028019a` |
+| Burst | 28 | FULL | `4ac33c4bb739` |
+| Eclipse | 29 |  | `295e40c4016c` |
+| Tendril | 30 |  | `af37ce9e6b62` |
+| Orbits | 31 |  | `5a6ff40bcbf2` |
+| Film burn | 32 |  | `see FILM` |
+| Thermal | 33 | FULL | `9760a68500f6` |
+
+Film burn has no block in the main shader. It lives in the finishing shader
+and in the Film burn logic.
 
 ## Fast loop and rotation speed
 
@@ -205,7 +287,7 @@ and heavy content matters:
 
 - After an update, check the version tag in the footer; hard refresh with
   Ctrl+F5 if it shows an older version. Current:
-  `Storytellers Motion · WEB v7.0-b57 · 2026-11-14`.
+  `Storytellers Motion · v7.0-b58 · 2026-11-27`.
 - The console line `[storytellersmotion export] strategy:` tells you which pipeline
   ran: `webcodecs avc1...` means the GPU encoder (the progress label also
   shows `GPU encode`), anything else means the real-time fallback.
@@ -216,3 +298,57 @@ and heavy content matters:
   Fast loop would reset their continuous rotation at every loop.
 - The background color looks different on another computer: the chosen color
   is stored per browser. Pick it once on each machine.
+
+### Tested and confirmed: keep as it is
+
+These were tested by the owner and accepted. Do not change them unless he
+asks for that item.
+
+- **Export**: Fast loop and Full render both give a valid MP4 with sound.
+  File name `storytellersmotion-<ratio>-<artwork>-<effect>.mp4`.
+- **Sleeve opening** (Full render): record out from 0.5 to 4.5 s, text
+  from 5.0 s, effect from 8.0 s. He asked for this slow pace. Do not
+  shorten it.
+- **Effect growth in the opening**: Tendril from the rim at its own pace,
+  Orbits one orbit after another, Eclipse thickening from the rim. Every
+  other effect opens as a soft circle out of the record.
+- **Effect opening** on Disc, Card and Vinyl Record: effect from 1.0 s,
+  text from 3.5 s. Switch on by default.
+- **Play opening**: the preview runs on the same plan as the export.
+- **Film burn**: light on in about half of the frames, at random, with no
+  build-up and no calm. Longest dark gap about half a second. It lies over
+  the artwork, on a plain background.
+- **Thermal**: no line sweeping across the frame. It glides between random
+  readings and never repeats, so it is marked FULL.
+- **Hint**: one quiet row at the top right, plain interface font. An effect
+  says only what it goes best with. No labels, no extra rows.
+- **Footer**: name, version and date only. Change notes go in the
+  Changelog.
+- **Interface**: no bright colors, short labels, nothing hidden.
+- **Local use**: the page must be served over http (the launcher does
+  this). Opened straight from the file, the export fails.
+
+## Changelog
+
+The page footer shows only the name, the version and the date. What changed
+in each build is listed here, newest first.
+
+| Build | Date | What changed |
+|---|---|---|
+| v7.0-b58 | 2026-11-27 | The footer shows only name, version and date. Change notes moved to this changelog. README gained the "Stable effects: do not alter" rule with fingerprints, and the list of tested things to keep. |
+| v7.0-b57 | 2026-11-27 | Hint reduced to one quiet row in the plain interface font. An effect says only what it goes best with. |
+| v7.0-b56 | 2026-11-27 | Thermal marked FULL (it no longer loops with the disc). A larger hint card was tried and withdrawn in b57. |
+| v7.0-b55 | 2026-11-26 | Thermal: scan line removed. It glides between random readings of the picture and never repeats. |
+| v7.0-b54 | 2026-11-26 | Film burn and Thermal became effects of their own in the grid, steered by Effect settings. The two layer switches were removed. |
+| v7.0-b53 | 2026-11-26 | Film burn flickers at random all the time, on a rhythm measured on reference footage. |
+| v7.0-b52 | 2026-11-26 | Film burn added: light leaks flashing over the whole frame. |
+| v7.0-b51 | 2026-11-26 | Spectrum removed. |
+| v7.0-b50 | 2026-11-16 | Reactor removed. |
+| v7.0-b49 | 2026-11-16 | Vortex, Ripple, Melt, Droste and Liquid restored to their original code and look. |
+| v7.0-b48 | 2026-11-14 | Play opening: the openings can be watched in the preview. |
+| v7.0-b47 | 2026-11-14 | Effect opening on Disc, Card and Vinyl Record, with its own switch. |
+| v7.0-b46 | 2026-11-14 | Switches for the Text entrance and the Sleeve opening. |
+| v7.0-b45 | 2026-11-14 | In the Sleeve opening, Orbits unfold from the record and Eclipse grows from the rim. |
+| v7.0-b42 | 2026-11-14 | In the Sleeve opening, Tendril starts from nothing at the rim and grows. |
+| v7.0-b41 | 2026-11-14 | In the Sleeve opening, the effect grows out of the record. |
+| v7.0-b40 | 2026-11-14 | Slow Sleeve opening in three steps: record, then text, then effect. |
